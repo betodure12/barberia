@@ -298,17 +298,16 @@ h1, h2, h3, h4, h5, h6 {
 /* Topbar */
 .topbar {
   height: var(--topbar-height);
-  background: rgba(14, 18, 27, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: #0e121b !important; /* 100% sólido opaco - evita que el contenido se trasluzca al hacer scroll */
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25) !important;
   position: sticky;
   top: 0;
-  z-index: 90;
+  z-index: 100 !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 30px;
+  padding: 0 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .topbar-back-btn {
@@ -568,6 +567,28 @@ h1, h2, h3, h4, h5, h6 {
 
 .mobile-nav-btn.pos-btn.active .pos-icon-circle {
   transform: scale(1.08);
+}
+
+/* Laptop Screens (1200px - 1400px) */
+@media (max-width: 1400px) {
+  .topbar {
+    padding: 0 16px !important;
+  }
+  .topbar-actions {
+    gap: 6px !important;
+  }
+  .topbar-actions .btn {
+    padding: 5px 9px !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+  }
+  .live-clock {
+    padding: 5px 9px !important;
+    font-size: 0.76rem !important;
+  }
+  .currency-btn {
+    padding: 4px 8px !important;
+  }
 }
 
 /* Responsive Breakpoints */

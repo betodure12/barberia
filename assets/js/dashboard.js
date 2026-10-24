@@ -21,13 +21,25 @@ const Dashboard = {
   },
 
   renderStats(data) {
-    document.getElementById('dash-revenue-today').textContent = App.formatMoney(data.revenue_today);
-    document.getElementById('dash-sales-count-today').textContent = `${data.sales_count_today} ventas hoy`;
+    const setTxt = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
 
-    document.getElementById('dash-appointments-today').textContent = data.appointments_today_count;
-    document.getElementById('dash-clients-count').textContent = data.total_clients;
-    document.getElementById('dash-revenue-month').textContent = App.formatMoney(data.revenue_month);
-    document.getElementById('dash-sales-month-count').textContent = `${data.sales_count_month} ventas mes`;
+    setTxt('dash-revenue-today', App.formatMoney(data.revenue_today));
+    setTxt('dash-sales-count-today', `${data.sales_count_today} ventas hoy`);
+    setTxt('dash-appointments-today', data.appointments_today_count);
+    setTxt('dash-clients-count', data.total_clients);
+    setTxt('dash-revenue-month', App.formatMoney(data.revenue_month));
+    setTxt('dash-sales-month-count', `${data.sales_count_month} ventas mes`);
+
+    // Welcome Landing stats
+    setTxt('welcome-revenue-today', App.formatMoney(data.revenue_today));
+    setTxt('welcome-sales-count-today', `${data.sales_count_today} ventas hoy`);
+    setTxt('welcome-appointments-today', data.appointments_today_count);
+    setTxt('welcome-clients-count', data.total_clients);
+    setTxt('welcome-revenue-month', App.formatMoney(data.revenue_month));
+    setTxt('welcome-sales-month-count', `${data.sales_count_month} ventas mes`);
 
     // Low stock count badge in sidebar
     const lowStockCount = data.low_stock_products ? data.low_stock_products.length : 0;
@@ -44,15 +56,18 @@ const Dashboard = {
 
   renderAppointments(appointments) {
     const container = document.getElementById('dash-today-appointments-list');
-    if (!container) return;
+    const wContainer = document.getElementById('welcome-today-appointments-list');
+    if (!container && !wContainer) return;
 
     if (!appointments || appointments.length === 0) {
-      container.innerHTML = `
+      const emptyHtml = `
         <div style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
           <i class="bi bi-calendar-check" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
           No hay reservas programadas para hoy
         </div>
       `;
+      if (container) container.innerHTML = emptyHtml;
+      if (wContainer) wContainer.innerHTML = emptyHtml;
       return;
     }
 
@@ -143,8 +158,8 @@ const Dashboard = {
 
     desktopHtml += `</tbody></table></div>`;
     mobileHtml += `</div>`;
-
-    container.innerHTML = desktopHtml + mobileHtml;
+    if (container) container.innerHTML = desktopHtml + mobileHtml;
+    if (wContainer) wContainer.innerHTML = desktopHtml + mobileHtml;
   },
 
   renderLowStock(lowStock) {

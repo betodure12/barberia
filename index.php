@@ -41,7 +41,12 @@
 
     <nav class="sidebar-nav">
       <div class="nav-section-title">Operaciones Diarias</div>
-      <a class="nav-item active" data-view="appointments">
+      <a class="nav-item active" data-view="welcome">
+        <i class="bi bi-house-door-fill"></i>
+        <span>Inicio / Bienvenida</span>
+        <span class="nav-badge gold">HOME</span>
+      </a>
+      <a class="nav-item" data-view="appointments">
         <i class="bi bi-calendar-week-fill"></i>
         <span>Turnos de Hoy</span>
         <span class="nav-badge gold" id="badge-nav-turnos">Agenda</span>
@@ -174,7 +179,7 @@
         <button class="btn btn-outline-gold btn-sm d-none-mobile" onclick="Appointments.openNewModal()">
           <i class="bi bi-calendar-plus"></i> <span>Nueva Cita</span>
         </button>
-        <button class="btn btn-gold btn-sm d-none-mobile" onclick="App.navigate('pos')">
+        <button class="btn btn-gold btn-sm d-none-mobile" id="topbar-btn-pos" onclick="App.navigate('pos')">
           <i class="bi bi-cash-coin"></i> <span>Abrir Caja</span>
         </button>
       </div>
@@ -182,6 +187,168 @@
 
     <!-- Content Views Area -->
     <div class="content-area">
+
+      <!-- ==========================================
+           VIEW 0: BIENVENIDA / LANDING (HOME)
+           ========================================== -->
+      <section id="view-welcome" class="view-section active">
+        <!-- Hero Welcome Banner -->
+        <div class="welcome-hero-card">
+          <div class="welcome-hero-content">
+            <div class="welcome-badge">
+              <span class="pulse-gold-dot"></span>
+              <span>SISTEMA ACTIVO • MF BARBER & LOUNGE</span>
+            </div>
+            <h1 class="welcome-hero-title">
+              ¡Bienvenido al Sistema <span class="text-gold-gradient">MF Barber Shop</span>!
+            </h1>
+            <p class="welcome-hero-subtitle">
+              Plataforma integral de gestión: reserva de turnos, cobranza ágil en caja, catálogo exclusivo de cortes, perfumería decant y bebidas lounge.
+            </p>
+            <div class="welcome-quick-actions">
+              <button class="btn btn-gold" onclick="Appointments.openNewModal()" style="font-weight: 700; height: 42px; padding: 0 16px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="bi bi-calendar-plus"></i> Reservar Turno
+              </button>
+              <button class="btn btn-outline-gold" onclick="App.navigate('pos')" style="font-weight: 700; height: 42px; padding: 0 16px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="bi bi-lightning-charge-fill"></i> Abrir Caja (POS)
+              </button>
+              <button class="btn btn-secondary" onclick="App.navigate('appointments')" style="font-weight: 700; height: 42px; padding: 0 14px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="bi bi-calendar-week"></i> Ver Agenda de Hoy
+              </button>
+            </div>
+          </div>
+          <div class="welcome-hero-logo-wrap">
+            <div class="welcome-logo-glow"></div>
+            <img src="assets/img/logo.jpg" alt="MF Barber" class="welcome-hero-logo">
+          </div>
+        </div>
+
+        <!-- 4 Action Cards Grid (Landing Navigation) -->
+        <div class="welcome-modules-grid">
+          <!-- Card 1: Turnos -->
+          <div class="welcome-module-card" onclick="App.navigate('appointments')">
+            <div class="module-card-icon gold">
+              <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="module-card-body">
+              <h3>Agenda de Turnos</h3>
+              <p>Control de citas del día, reservas de clientes y lista de espera en tiempo real.</p>
+              <div class="module-card-footer">
+                <span class="btn-text-gold">Entrar a Turnos <i class="bi bi-arrow-right"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: POS / Caja -->
+          <div class="welcome-module-card" onclick="App.navigate('pos')">
+            <div class="module-card-icon emerald">
+              <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="module-card-body">
+              <h3>Venta Rápida (Caja)</h3>
+              <p>Cobro de cortes, fraccionamiento de decants, bebidas y comprobantes inmediatos.</p>
+              <div class="module-card-footer">
+                <span class="btn-text-gold">Abrir Caja POS <i class="bi bi-arrow-right"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Clientes -->
+          <div class="welcome-module-card" onclick="App.navigate('clients')">
+            <div class="module-card-icon purple">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="module-card-body">
+              <h3>Fichas de Clientes</h3>
+              <p>Base de datos de clientes frecuentes, notas de estilo, teléfonos y cobro directo.</p>
+              <div class="module-card-footer">
+                <span class="btn-text-gold">Ver Clientes <i class="bi bi-arrow-right"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Inventario -->
+          <div class="welcome-module-card" onclick="App.navigate('inventory')">
+            <div class="module-card-icon sky">
+              <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div class="module-card-body">
+              <h3>Stock & Perfumería</h3>
+              <p>Inventario de perfumes, frascos decants por ml, botellas y bebidas lounge.</p>
+              <div class="module-card-footer">
+                <span class="btn-text-gold">Ver Inventario <i class="bi bi-arrow-right"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Cards Resumen del Día -->
+        <div class="grid-4" style="margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-icon gold">
+              <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Ingresos de Hoy</div>
+              <div class="stat-value" id="welcome-revenue-today">$ 0</div>
+              <div class="stat-desc" id="welcome-sales-count-today">0 ventas hoy</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon sky">
+              <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Turnos de Hoy</div>
+              <div class="stat-value" id="welcome-appointments-today">0</div>
+              <div class="stat-desc">Citas programadas</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon emerald">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Recaudación Mes</div>
+              <div class="stat-value" id="welcome-revenue-month">$ 0</div>
+              <div class="stat-desc" id="welcome-sales-month-count">Mes actual</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <i class="bi bi-person-check-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Total Clientes</div>
+              <div class="stat-value" id="welcome-clients-count">0</div>
+              <div class="stat-desc">Registrados</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Citas de Hoy Widget -->
+        <div class="card card-gold-accent" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="bi bi-clock-history"></i> Turnos Programados para Hoy
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline btn-sm" onclick="App.navigate('appointments')">
+                Ver Agenda Completa <i class="bi bi-arrow-right"></i>
+              </button>
+              <button class="btn btn-gold btn-sm" onclick="Appointments.openNewModal()">
+                <i class="bi bi-plus-lg"></i> Agendar Cita
+              </button>
+            </div>
+          </div>
+          <div id="welcome-today-appointments-list">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
 
       <!-- ==========================================
            VIEW 1: DASHBOARD
@@ -300,7 +467,7 @@
       <!-- ==========================================
            VIEW 2: APPOINTMENTS / RESERVAS
            ========================================== -->
-      <section id="view-appointments" class="view-section active">
+      <section id="view-appointments" class="view-section">
         <div class="card" style="margin-bottom: 14px; padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div>
@@ -1455,7 +1622,11 @@
 
 <!-- Mobile Bottom Navigation Bar -->
 <nav class="mobile-bottom-nav">
-  <button class="mobile-nav-btn active" data-view="appointments">
+  <button class="mobile-nav-btn active" data-view="welcome">
+    <i class="bi bi-house-door-fill"></i>
+    <span>Inicio</span>
+  </button>
+  <button class="mobile-nav-btn" data-view="appointments">
     <i class="bi bi-calendar-week-fill"></i>
     <span>Turnos</span>
   </button>
@@ -1468,10 +1639,6 @@
   <button class="mobile-nav-btn" data-view="clients">
     <i class="bi bi-people-fill"></i>
     <span>Clientes</span>
-  </button>
-  <button class="mobile-nav-btn" data-view="inventory">
-    <i class="bi bi-box-seam-fill"></i>
-    <span>Stock</span>
   </button>
   <button class="mobile-nav-btn" data-view="sales">
     <i class="bi bi-bar-chart-line-fill"></i>

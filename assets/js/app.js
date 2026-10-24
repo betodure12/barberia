@@ -1,6 +1,6 @@
 const App = {
-  currentView: 'appointments',
-  historyStack: ['appointments'],
+  currentView: 'welcome',
+  historyStack: ['welcome'],
   currency: localStorage.getItem('barber_currency') || 'PYG',
   exchangeRate: parseFloat(localStorage.getItem('barber_exchange_rate')) || 7500,
 
@@ -17,8 +17,8 @@ const App = {
       if (badge) badge.style.display = 'inline-flex';
     }
 
-    // Load initial view (appointments / turnos de hoy)
-    this.navigate('appointments', false);
+    // Load initial view (Landing de Bienvenida)
+    this.navigate('welcome', false);
   },
 
   setCurrency(cur) {
@@ -159,7 +159,7 @@ const App = {
     const backBtn = document.getElementById('btn-topbar-back');
     const menuBtn = document.getElementById('btn-mobile-menu');
     const isMobile = window.innerWidth <= 768;
-    const isRoot = (viewName === 'appointments');
+    const isRoot = (viewName === 'welcome' || viewName === 'appointments');
 
     if (backBtn) {
       if (isRoot) {
@@ -170,6 +170,12 @@ const App = {
         // Hide hamburger menu in subviews on mobile to give full width to title
         if (menuBtn && isMobile) menuBtn.style.display = 'none';
       }
+    }
+
+    // Hide "Abrir Caja" button in topbar if already on POS view
+    const topbarPosBtn = document.getElementById('topbar-btn-pos');
+    if (topbarPosBtn) {
+      topbarPosBtn.style.display = (viewName === 'pos' || isMobile) ? 'none' : 'inline-flex';
     }
 
     // Update active nav items (sidebar + bottom nav)
@@ -195,6 +201,7 @@ const App = {
 
     // Update Page Header (concise for mobile screens)
     const titles = {
+      welcome: { title: isMobile ? 'MF Barber Shop' : '¡Bienvenido a MF Barber Shop!', subtitle: 'Sistema de Gestión Integral & Control de Caja' },
       appointments: { title: isMobile ? 'Turnos' : 'Agenda de Turnos', subtitle: 'Turnos del día, reservas y atención directa' },
       pos: { title: isMobile ? 'Venta Rápida' : 'Venta Rápida & Caja (POS)', subtitle: 'Cobro de cortes, perfumes decants, bebidas y tickets' },
       clients: { title: isMobile ? 'Clientes' : 'Directorio de Clientes', subtitle: 'Base de clientes, ficha de estilo y cobro directo' },
@@ -213,7 +220,7 @@ const App = {
 
     // Trigger module loaders safely
     try {
-      if (viewName === 'dashboard' && typeof Dashboard !== 'undefined') Dashboard.load();
+      if ((viewName === 'dashboard' || viewName === 'welcome') && typeof Dashboard !== 'undefined') Dashboard.load();
       if (viewName === 'appointments' && typeof Appointments !== 'undefined') Appointments.load();
       if (viewName === 'clients' && typeof Clients !== 'undefined') Clients.load();
       if (viewName === 'services' && typeof Services !== 'undefined') Services.load();
