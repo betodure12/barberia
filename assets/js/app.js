@@ -196,12 +196,12 @@ const App = {
     // Update Page Header (concise for mobile screens)
     const titles = {
       appointments: { title: isMobile ? 'Turnos' : 'Agenda de Turnos', subtitle: 'Turnos del día, reservas y atención directa' },
-      pos: { title: isMobile ? 'Venta Rápida (Caja)' : 'Venta Rápida & Caja (POS)', subtitle: 'Cobro de cortes, perfumes decants, bebidas y tickets' },
+      pos: { title: isMobile ? 'Venta Rápida' : 'Venta Rápida & Caja (POS)', subtitle: 'Cobro de cortes, perfumes decants, bebidas y tickets' },
       clients: { title: isMobile ? 'Clientes' : 'Directorio de Clientes', subtitle: 'Base de clientes, ficha de estilo y cobro directo' },
       inventory: { title: isMobile ? 'Stock' : 'Stock & Inventario', subtitle: 'Perfumes decants fraccionados, botellas y bebidas' },
       sales: { title: isMobile ? 'Reportes' : 'Reportes & Recaudación', subtitle: 'Resumen de ingresos del día, desglose y comprobantes' },
-      services: { title: isMobile ? 'Cortes & Tarifas' : 'Cortes & Servicios', subtitle: 'Catálogo de cortes de cabello, barba y tarifas' },
-      dashboard: { title: isMobile ? 'Panel General' : 'Panel de Control', subtitle: 'Resumen general y estadísticas de la barbería' }
+      services: { title: isMobile ? 'Cortes' : 'Cortes & Servicios', subtitle: 'Catálogo de cortes de cabello, barba y tarifas' },
+      dashboard: { title: isMobile ? 'Panel' : 'Panel de Control', subtitle: 'Resumen general y estadísticas de la barbería' }
     };
 
     if (titles[viewName]) {

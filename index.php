@@ -464,8 +464,8 @@
           <div id="pos-panel-catalog">
             
             <!-- Quick Client Assignment Bar -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-              <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px;">
+            <div class="pos-quick-client-bar" style="background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+              <div class="pos-client-main-row" style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px;">
                 <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(212,175,55,0.15); display: flex; align-items: center; justify-content: center; color: var(--gold-light); font-size: 1.15rem; flex-shrink: 0;">
                   <i class="bi bi-person-check-fill"></i>
                 </div>
@@ -476,7 +476,7 @@
                   </select>
                 </div>
               </div>
-              <button type="button" class="btn btn-outline-gold btn-sm" onclick="POS.openQuickAddClient()" style="font-weight: 700; height: 36px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-sm);">
+              <button type="button" class="btn btn-outline-gold btn-sm btn-add-client" onclick="POS.openQuickAddClient()" style="font-weight: 700; height: 36px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-sm);">
                 <i class="bi bi-person-plus-fill"></i> + Registrar Cliente
               </button>
             </div>
