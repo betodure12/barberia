@@ -274,15 +274,23 @@ const Sales = {
       let payIcon = '<i class="bi bi-cash"></i>';
       let payLabel = 'Efectivo';
 
-      const methodUpper = (s.payment_method || '').toUpperCase();
-      if (methodUpper.includes('TARJETA') || methodUpper.includes('POS')) {
-        payBadge = 'badge-sky';
-        payIcon = '<i class="bi bi-credit-card-2-front"></i>';
-        payLabel = 'Cobro en POS';
-      } else if (methodUpper.includes('TRANSFERENCIA')) {
-        payBadge = 'badge-purple';
-        payIcon = '<i class="bi bi-phone-flip"></i>';
-        payLabel = 'Transferencia';
+      const isCancelled = s.status === 'Cancelada';
+
+      if (isCancelled) {
+        payBadge = 'badge-rose';
+        payIcon = '<i class="bi bi-x-octagon"></i>';
+        payLabel = 'Anulada';
+      } else {
+        const methodUpper = (s.payment_method || '').toUpperCase();
+        if (methodUpper.includes('TARJETA') || methodUpper.includes('POS')) {
+          payBadge = 'badge-sky';
+          payIcon = '<i class="bi bi-credit-card-2-front"></i>';
+          payLabel = 'Cobro en POS';
+        } else if (methodUpper.includes('TRANSFERENCIA')) {
+          payBadge = 'badge-purple';
+          payIcon = '<i class="bi bi-phone-flip"></i>';
+          payLabel = 'Transferencia';
+        }
       }
 
       const isCounter = !s.client_id || (s.client_name || '').toLowerCase().includes('ocasional') || (s.client_name || '').toLowerCase().includes('mostrador');
@@ -295,8 +303,12 @@ const Sales = {
 
       // Row for desktop
       desktopHtml += `
-        <tr>
-          <td><strong style="font-family: var(--font-mono); color: var(--text-gold);">#TK-${String(s.id).padStart(5, '0')}</strong></td>
+        <tr style="${isCancelled ? 'opacity: 0.65; background: rgba(225, 29, 72, 0.03);' : ''}">
+          <td>
+            <strong style="font-family: var(--font-mono); color: ${isCancelled ? 'var(--rose)' : 'var(--text-gold)'}; ${isCancelled ? 'text-decoration: line-through;' : ''}">
+              #TK-${String(s.id).padStart(5, '0')}
+            </strong>
+          </td>
           <td>
             <div style="font-size: 0.85rem; color: #fff;">${s.created_at}</div>
           </td>
@@ -315,7 +327,7 @@ const Sales = {
           </td>
           <td><span class="badge ${payBadge}">${payIcon} ${payLabel}</span></td>
           <td>
-            <strong style="font-family: var(--font-mono); color: var(--gold-light); font-size: 1.05rem;">
+            <strong style="font-family: var(--font-mono); color: ${isCancelled ? 'var(--text-muted)' : 'var(--gold-light)'}; font-size: 1.05rem; ${isCancelled ? 'text-decoration: line-through;' : ''}">
               ${App.formatMoney(s.total)}
             </strong>
           </td>
@@ -326,18 +338,27 @@ const Sales = {
             <span style="font-size: 0.8rem; color: var(--text-secondary);">${s.notes || '-'}</span>
           </td>
           <td style="text-align: right;">
-            <button class="btn btn-outline-gold btn-sm" onclick="Sales.viewReceipt(${s.id})">
-              <i class="bi bi-file-earmark-text"></i> Ver Ticket
-            </button>
+            <div style="display: inline-flex; gap: 6px; align-items: center;">
+              <button class="btn btn-outline-gold btn-sm" onclick="Sales.viewReceipt(${s.id})" title="Ver comprobante">
+                <i class="bi bi-file-earmark-text"></i> Ticket
+              </button>
+              ${!isCancelled ? `
+                <button class="btn btn-danger btn-sm" onclick="Sales.cancelSale(${s.id})" title="Anular venta y reingresar stock" style="padding: 4px 8px;">
+                  <i class="bi bi-x-octagon"></i>
+                </button>
+              ` : `
+                <span class="badge badge-rose" style="font-size: 0.72rem; padding: 3px 6px;">Anulada</span>
+              `}
+            </div>
           </td>
         </tr>
       `;
 
       // Card for mobile
       mobileHtml += `
-        <div class="mobile-item-card">
+        <div class="mobile-item-card" style="${isCancelled ? 'opacity: 0.7; border-color: rgba(225, 29, 72, 0.3);' : ''}">
           <div class="mobile-item-card-header">
-            <span style="font-family: var(--font-mono); font-weight: 800; color: var(--text-gold); font-size: 0.95rem;">
+            <span style="font-family: var(--font-mono); font-weight: 800; color: ${isCancelled ? 'var(--rose)' : 'var(--text-gold)'}; font-size: 0.95rem; ${isCancelled ? 'text-decoration: line-through;' : ''}">
               #TK-${String(s.id).padStart(5, '0')}
             </span>
             <span class="badge ${payBadge}">${payIcon} ${payLabel}</span>
@@ -351,16 +372,23 @@ const Sales = {
           </div>
           <div class="mobile-item-card-meta">
             <span><i class="bi bi-calendar-event"></i> ${s.created_at}</span>
-            <span style="font-family: var(--font-mono); color: var(--gold-light); font-weight: 800; font-size: 1.2rem; margin-left: auto;">
+            <span style="font-family: var(--font-mono); color: ${isCancelled ? 'var(--text-muted)' : 'var(--gold-light)'}; font-weight: 800; font-size: 1.2rem; margin-left: auto; ${isCancelled ? 'text-decoration: line-through;' : ''}">
               ${App.formatMoney(s.total)}
             </span>
           </div>
           ${changeInfo}
           ${s.notes ? `<div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 8px;">Nota: ${s.notes}</div>` : ''}
-          <div class="mobile-item-card-footer" style="margin-top: 10px;">
-            <button class="btn btn-outline-gold btn-sm" style="width: 100%;" onclick="Sales.viewReceipt(${s.id})">
-              <i class="bi bi-receipt"></i> Ver Ticket / Imprimir / WhatsApp
+          <div class="mobile-item-card-footer" style="margin-top: 10px; display: flex; gap: 6px;">
+            <button class="btn btn-outline-gold btn-sm" style="flex: 1;" onclick="Sales.viewReceipt(${s.id})">
+              <i class="bi bi-receipt"></i> Ver Ticket
             </button>
+            ${!isCancelled ? `
+              <button class="btn btn-danger btn-sm" onclick="Sales.cancelSale(${s.id})" title="Anular">
+                <i class="bi bi-x-octagon"></i> Anular
+              </button>
+            ` : `
+              <span class="badge badge-rose" style="padding: 6px 10px;"><i class="bi bi-x-circle"></i> Anulada</span>
+            `}
           </div>
         </div>
       `;
@@ -470,12 +498,164 @@ const Sales = {
           ` : ''}
         </div>
 
+        ${data.status === 'Cancelada' ? `
+          <div style="background: rgba(225, 29, 72, 0.15); border: 2px dashed #f43f5e; color: #f43f5e; padding: 10px; border-radius: 6px; text-align: center; font-weight: 800; font-size: 0.95rem; margin-bottom: 12px; letter-spacing: 1px;">
+            <i class="bi bi-x-octagon-fill"></i> COMPROBANTE ANULADO
+            <div style="font-size: 0.72rem; font-weight: normal; margin-top: 3px; color: #fda4af;">Esta venta fue cancelada y sus productos reintegrados al stock.</div>
+          </div>
+        ` : ''}
+
         <div class="ticket-footer">
-          <div style="font-weight: bold; font-size: 0.88rem; color: #000;">¡Muchas gracias por su preferencia y compra! 💈✂️</div>
-          <div style="font-size: 0.72rem; color: #555; margin-top: 3px;">MF Barber &amp; Lounge</div>
+          <div style="font-weight: bold; font-size: 0.88rem; color: #000;">${(data.settings && data.settings.ticket_footer) ? data.settings.ticket_footer : '¡Muchas gracias por su preferencia y compra! 💈✂️'}</div>
+          <div style="font-size: 0.72rem; color: #555; margin-top: 3px;">${bName}</div>
         </div>
       </div>
     `;
+
+    // Update receipt modal buttons (add Anular button if not cancelled)
+    const btnCancelSale = document.getElementById('btn-receipt-cancel-sale');
+    if (btnCancelSale) {
+      if (data.status === 'Cancelada') {
+        btnCancelSale.style.display = 'none';
+      } else {
+        btnCancelSale.style.display = 'inline-flex';
+        btnCancelSale.onclick = () => this.cancelSale(data.id);
+      }
+    }
+  },
+
+  async cancelSale(saleId) {
+    if (!confirm(`¿Estás seguro de anular la venta #TK-${String(saleId).padStart(5, '0')}?\n\nLos productos se devolverán al inventario automáticamente.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('api/sales.php?action=cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: saleId })
+      });
+      const json = await res.json();
+      if (json.success) {
+        App.toast(json.message || 'Venta anulada con éxito', 'success');
+        App.closeModal('modal-receipt');
+        await this.fetchSales();
+        if (typeof Inventory !== 'undefined') Inventory.fetchProducts();
+        if (typeof Dashboard !== 'undefined') Dashboard.load();
+      } else {
+        App.toast(json.error || 'No se pudo anular la venta', 'error');
+      }
+    } catch (e) {
+      App.toast('Error al comunicarse con el servidor', 'error');
+    }
+  },
+
+  currentClosingSummary: null,
+
+  async openDailyClosingModal() {
+    try {
+      const res = await fetch('api/sales.php?action=daily_summary');
+      const json = await res.json();
+      if (json.success) {
+        const d = json.data;
+        this.currentClosingSummary = d;
+
+        const dateEl = document.getElementById('closing-date-display');
+        const countEl = document.getElementById('closing-sales-count');
+        const cashEl = document.getElementById('closing-cash-sales');
+        const cardEl = document.getElementById('closing-card-sales');
+        const transEl = document.getElementById('closing-transfer-sales');
+        const totEl = document.getElementById('closing-total-sales');
+
+        if (dateEl) dateEl.textContent = d.date;
+        if (countEl) countEl.textContent = `${d.count} ventas`;
+        if (cashEl) cashEl.textContent = App.formatMoney(d.cash);
+        if (cardEl) cardEl.textContent = App.formatMoney(d.card);
+        if (transEl) transEl.textContent = App.formatMoney(d.transfer);
+        if (totEl) totEl.textContent = App.formatMoney(d.total);
+
+        // Reset inputs
+        const initialInput = document.getElementById('closing-initial-cash');
+        const actualInput = document.getElementById('closing-actual-cash');
+        if (initialInput) initialInput.value = '';
+        if (actualInput) actualInput.value = '';
+        this.updateClosingCalculations();
+
+        App.openModal('modal-daily-closing');
+      } else {
+        App.toast('Error al consultar datos de caja', 'error');
+      }
+    } catch (e) {
+      App.toast('Error de conexión al abrir arqueo', 'error');
+    }
+  },
+
+  updateClosingCalculations() {
+    if (!this.currentClosingSummary) return;
+    const initial = parseFloat(document.getElementById('closing-initial-cash')?.value) || 0;
+    const cashSales = parseFloat(this.currentClosingSummary.cash) || 0;
+    const expected = initial + cashSales;
+
+    const expectedEl = document.getElementById('closing-expected-cash');
+    if (expectedEl) expectedEl.textContent = App.formatMoney(expected);
+
+    const actualInput = document.getElementById('closing-actual-cash');
+    const actual = actualInput && actualInput.value !== '' ? parseFloat(actualInput.value) : expected;
+    const diff = actual - expected;
+
+    const diffEl = document.getElementById('closing-diff-cash');
+    if (diffEl) {
+      if (diff === 0) {
+        diffEl.innerHTML = `<span style="color: var(--emerald); font-weight: 700;">Exacto (Sin diferencia)</span>`;
+      } else if (diff > 0) {
+        diffEl.innerHTML = `<span style="color: var(--emerald); font-weight: 700;">+${App.formatMoney(diff)} (Sobrante)</span>`;
+      } else {
+        diffEl.innerHTML = `<span style="color: var(--rose); font-weight: 700;">-${App.formatMoney(Math.abs(diff))} (Faltante)</span>`;
+      }
+    }
+  },
+
+  async saveDailyClosing(e) {
+    if (e) e.preventDefault();
+    if (!this.currentClosingSummary) return;
+
+    const initial = parseFloat(document.getElementById('closing-initial-cash')?.value) || 0;
+    const cashSales = parseFloat(this.currentClosingSummary.cash) || 0;
+    const cardSales = parseFloat(this.currentClosingSummary.card) || 0;
+    const transferSales = parseFloat(this.currentClosingSummary.transfer) || 0;
+    const totalSales = parseFloat(this.currentClosingSummary.total) || (cashSales + cardSales + transferSales);
+    const expected = initial + cashSales;
+    const actualInput = document.getElementById('closing-actual-cash');
+    const actual = actualInput && actualInput.value !== '' ? parseFloat(actualInput.value) : expected;
+    const notes = document.getElementById('closing-notes')?.value || '';
+
+    try {
+      const res = await fetch('api/sales.php?action=close_register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          closing_date: this.currentClosingSummary.date,
+          initial_cash: initial,
+          cash_sales: cashSales,
+          card_sales: cardSales,
+          transfer_sales: transferSales,
+          total_sales: totalSales,
+          expected_cash: expected,
+          actual_cash: actual,
+          notes: notes,
+          closed_by: 'Administrador'
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        App.toast('Cierre de caja guardado exitosamente', 'success');
+        App.closeModal('modal-daily-closing');
+      } else {
+        App.toast(json.error || 'Error al guardar cierre', 'error');
+      }
+    } catch (err) {
+      App.toast('Error al comunicarse con el servidor', 'error');
+    }
   },
 
   printCurrentReceipt() {
@@ -522,9 +702,12 @@ const Sales = {
     const usdVal = (d.total / rate).toFixed(2);
     const pygVal = Math.round(d.total).toLocaleString('es-PY');
 
-    const msg = `💈 *MF BARBER & LOUNGE* 💈\n` +
+    const bName = (d.settings && d.settings.business_name) ? d.settings.business_name : 'MF Barber & Lounge';
+
+    const msg = `💈 *${bName.toUpperCase()}* 💈\n` +
       `🧾 *COMPROBANTE DE COMPRA*\n` +
       `Ticket: #TK-${String(d.id).padStart(5, '0')}\n` +
+      (d.status === 'Cancelada' ? `⚠️ *ESTADO: VENTA ANULADA*\n` : '') +
       `Cliente: *${d.client_name}*\n` +
       `Fecha: ${d.created_at}\n\n` +
       `*DETALLE DE COMPRA:*\n${itemsText}\n\n` +

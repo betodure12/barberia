@@ -74,6 +74,16 @@
         <i class="bi bi-grid-1x2-fill"></i>
         <span>Panel Estadístico</span>
       </a>
+
+      <div class="nav-section-title">Ajustes & Sistema</div>
+      <a class="nav-item" onclick="App.openSettingsModal()" style="cursor: pointer;" title="Configuración del negocio y tickets">
+        <i class="bi bi-gear-fill"></i>
+        <span>Configuración</span>
+      </a>
+      <a class="nav-item" onclick="App.syncOfflineData()" style="cursor: pointer;" title="Sincronizar datos locales con el servidor">
+        <i class="bi bi-cloud-arrow-up-fill"></i>
+        <span>Sincronizar Nube</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -586,11 +596,16 @@
               <i class="bi bi-funnel text-gold"></i>
               <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Período:</span>
             </div>
-            <div class="filter-tabs" id="sales-period-tabs" style="margin-bottom: 0;">
-              <button type="button" class="tab-btn active" data-period="all" onclick="Sales.setPeriod('all')">Todo</button>
-              <button type="button" class="tab-btn" data-period="today" onclick="Sales.setPeriod('today')"><i class="bi bi-calendar-event"></i> Hoy</button>
-              <button type="button" class="tab-btn" data-period="week" onclick="Sales.setPeriod('week')">Esta Semana</button>
-              <button type="button" class="tab-btn" data-period="month" onclick="Sales.setPeriod('month')">Este Mes</button>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <div class="filter-tabs" id="sales-period-tabs" style="margin-bottom: 0;">
+                <button type="button" class="tab-btn active" data-period="all" onclick="Sales.setPeriod('all')">Todo</button>
+                <button type="button" class="tab-btn" data-period="today" onclick="Sales.setPeriod('today')"><i class="bi bi-calendar-event"></i> Hoy</button>
+                <button type="button" class="tab-btn" data-period="week" onclick="Sales.setPeriod('week')">Esta Semana</button>
+                <button type="button" class="tab-btn" data-period="month" onclick="Sales.setPeriod('month')">Este Mes</button>
+              </div>
+              <button type="button" class="btn btn-gold btn-sm" onclick="Sales.openDailyClosingModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
+                <i class="bi bi-safe-fill"></i> <span>Arqueo / Cierre de Caja</span>
+              </button>
             </div>
           </div>
 
@@ -1056,6 +1071,9 @@
         <i class="bi bi-whatsapp"></i> Enviar por WhatsApp
       </button>
       <div style="display: flex; gap: 6px;">
+        <button type="button" class="btn btn-danger" id="btn-receipt-cancel-sale" style="display: none;">
+          <i class="bi bi-x-octagon"></i> Anular Venta
+        </button>
         <button type="button" class="btn btn-secondary" onclick="Sales.printCurrentReceipt()">
           <i class="bi bi-printer"></i> Imprimir
         </button>
@@ -1108,6 +1126,122 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
         <button type="submit" class="btn btn-gold"><i class="bi bi-check-lg"></i> Guardar Cotización</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Business Settings / Configuración -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3><i class="bi bi-gear-fill text-gold"></i> Configuración del Negocio</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form onsubmit="App.saveSettings(event)">
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+          Estos datos se imprimen en los tickets térmicos y se utilizan en los comprobantes de WhatsApp.
+        </p>
+        <div class="form-group">
+          <label>Nombre de la Barbería / Negocio *</label>
+          <input type="text" id="setting-business-name" class="form-control" required placeholder="Ej: MF Barber & Lounge">
+        </div>
+        <div class="form-group">
+          <label>Teléfono de Contacto (WhatsApp) *</label>
+          <input type="text" id="setting-business-phone" class="form-control" placeholder="Ej: +595 993 554920">
+        </div>
+        <div class="form-group">
+          <label>Dirección / Local</label>
+          <input type="text" id="setting-business-address" class="form-control" placeholder="Ej: Local Central">
+        </div>
+        <div class="form-group">
+          <label>Mensaje al Pie del Ticket</label>
+          <input type="text" id="setting-ticket-footer" class="form-control" placeholder="¡Muchas gracias por su preferencia! 💈✂️">
+        </div>
+        <div class="form-group">
+          <label>Cotización 1 USD en Guaraníes (₲)</label>
+          <input type="number" id="setting-exchange-rate" class="form-control" value="7500" min="1" step="10">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-check-lg"></i> Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Arqueo y Cierre de Caja Diario -->
+<div class="modal-overlay" id="modal-daily-closing">
+  <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3><i class="bi bi-safe-fill text-gold"></i> Arqueo &amp; Cierre de Caja</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form onsubmit="Sales.saveDailyClosing(event)">
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Jornada:</span>
+            <div id="closing-date-display" style="font-weight: 800; color: #fff; font-size: 1.05rem;">-</div>
+          </div>
+          <span class="badge badge-gold" id="closing-sales-count" style="font-size: 0.85rem; padding: 6px 12px;">0 ventas</span>
+        </div>
+
+        <!-- Breakdown resumen de ventas del día -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; text-align: center;">
+          <div style="background: var(--bg-card); padding: 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--emerald); font-weight: 700;">💵 EFECTIVO</div>
+            <div id="closing-cash-sales" style="font-weight: 800; font-family: var(--font-mono); font-size: 0.95rem; margin-top: 4px;">₲ 0</div>
+          </div>
+          <div style="background: var(--bg-card); padding: 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--sky); font-weight: 700;">💳 POS / TARJETA</div>
+            <div id="closing-card-sales" style="font-weight: 800; font-family: var(--font-mono); font-size: 0.95rem; margin-top: 4px;">₲ 0</div>
+          </div>
+          <div style="background: var(--bg-card); padding: 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--purple); font-weight: 700;">📲 TRANSFERENCIA</div>
+            <div id="closing-transfer-sales" style="font-weight: 800; font-family: var(--font-mono); font-size: 0.95rem; margin-top: 4px;">₲ 0</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 16px;">
+          <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-secondary);">Total Ventas del Día:</span>
+          <span id="closing-total-sales" style="font-weight: 800; font-family: var(--font-mono); color: var(--gold-light); font-size: 1.1rem;">₲ 0</span>
+        </div>
+
+        <!-- Form fields for cash counting -->
+        <div class="form-group">
+          <label>Fondo Inicial de Caja (Monto de apertura en efectivo) ₲</label>
+          <input type="number" id="closing-initial-cash" class="form-control" placeholder="0" oninput="Sales.updateClosingCalculations()" style="font-weight: 700; font-family: var(--font-mono);">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(52, 211, 153, 0.08); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 6px; margin-bottom: 14px;">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Efectivo Esperado en Cajón:</span>
+            <div style="font-size: 0.72rem; color: var(--text-secondary);">(Fondo Inicial + Ventas Efectivo)</div>
+          </div>
+          <div id="closing-expected-cash" style="font-size: 1.15rem; font-weight: 800; font-family: var(--font-mono); color: var(--emerald);">₲ 0</div>
+        </div>
+
+        <div class="form-group">
+          <label>Efectivo Real Contado en Mano (Arqueo físico) ₲ *</label>
+          <input type="number" id="closing-actual-cash" class="form-control" placeholder="Ingrese el dinero contado en el cajón" oninput="Sales.updateClosingCalculations()" style="font-weight: 800; font-size: 1.1rem; font-family: var(--font-mono);">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 14px;">
+          <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Diferencia de Caja:</span>
+          <div id="closing-diff-cash" style="font-size: 0.95rem; font-weight: 700;">Exacto</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Observaciones del Cierre</label>
+          <textarea id="closing-notes" class="form-control" rows="2" placeholder="Notas sobre faltantes, gastos menores o retiros del día..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cerrar</button>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-safe-fill"></i> Registrar Cierre de Jornada</button>
       </div>
     </form>
   </div>

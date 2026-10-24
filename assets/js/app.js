@@ -404,6 +404,121 @@ const App = {
     }
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
+  },
+
+  async openSettingsModal() {
+    try {
+      const res = await fetch('api/settings.php?action=get');
+      const json = await res.json();
+      if (json.success && json.data) {
+        const s = json.data;
+        const nameInput = document.getElementById('setting-business-name');
+        const phoneInput = document.getElementById('setting-business-phone');
+        const addressInput = document.getElementById('setting-business-address');
+        const footerInput = document.getElementById('setting-ticket-footer');
+        const rateInput = document.getElementById('setting-exchange-rate');
+
+        if (nameInput) nameInput.value = s.business_name || '';
+        if (phoneInput) phoneInput.value = s.business_phone || '';
+        if (addressInput) addressInput.value = s.business_address || '';
+        if (footerInput) footerInput.value = s.ticket_footer || '';
+        if (rateInput) rateInput.value = s.exchange_rate || this.exchangeRate || 7500;
+
+        this.openModal('modal-settings');
+      } else {
+        this.toast('Error al consultar configuración', 'error');
+      }
+    } catch (e) {
+      this.toast('Error al abrir configuración', 'error');
+    }
+  },
+
+  async saveSettings(e) {
+    if (e) e.preventDefault();
+    const name = document.getElementById('setting-business-name')?.value.trim();
+    const phone = document.getElementById('setting-business-phone')?.value.trim();
+    const address = document.getElementById('setting-business-address')?.value.trim();
+    const footer = document.getElementById('setting-ticket-footer')?.value.trim();
+    const rate = document.getElementById('setting-exchange-rate')?.value.trim();
+
+    if (!name) {
+      this.toast('El nombre del negocio es obligatorio', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('api/settings.php?action=update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_name: name,
+          business_phone: phone,
+          business_address: address,
+          ticket_footer: footer,
+          exchange_rate: rate,
+          currency_code: 'PYG',
+          currency_symbol: '₲'
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        if (rate && parseFloat(rate) > 0) {
+          this.setExchangeRate(parseFloat(rate));
+        }
+        this.toast('Configuración guardada exitosamente', 'success');
+        this.closeModal('modal-settings');
+      } else {
+        this.toast(json.error || 'Error al guardar configuración', 'error');
+      }
+    } catch (err) {
+      this.toast('Error de conexión al guardar configuración', 'error');
+    }
+  },
+
+  async syncOfflineData() {
+    if (!window.BarberOffline) {
+      this.toast('Motor offline no disponible', 'info');
+      return;
+    }
+
+    const clients = BarberOffline.getCollection(BarberOffline.KEYS.CLIENTS);
+    const services = BarberOffline.getCollection(BarberOffline.KEYS.SERVICES);
+    const products = BarberOffline.getCollection(BarberOffline.KEYS.PRODUCTS);
+    const appointments = BarberOffline.getCollection(BarberOffline.KEYS.APPOINTMENTS);
+    const sales = BarberOffline.getCollection(BarberOffline.KEYS.SALES);
+    const saleItems = BarberOffline.getCollection(BarberOffline.KEYS.SALE_ITEMS);
+
+    if (sales.length === 0 && appointments.length === 0 && clients.length === 0) {
+      this.toast('No hay datos pendientes para sincronizar', 'info');
+      return;
+    }
+
+    this.toast('Sincronizando datos con el servidor...', 'info');
+
+    try {
+      const res = await fetch('api/sync.php?action=import_offline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clients,
+          services,
+          products,
+          appointments,
+          sales,
+          sale_items: saleItems
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.imported) {
+        const imp = json.imported;
+        this.toast(`¡Sincronizado! ${imp.clients} clientes, ${imp.appointments} turnos, ${imp.sales} ventas subidas al servidor`, 'success');
+        this.refreshCurrentView();
+      } else {
+        this.toast(json.error || 'Error al sincronizar con el servidor', 'error');
+      }
+    } catch (err) {
+      this.toast('No se pudo conectar al servidor para sincronizar', 'error');
+    }
   }
 };
 

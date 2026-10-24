@@ -5,12 +5,12 @@ $today = date('Y-m-d');
 $firstDayMonth = date('Y-m-01');
 
 // 1. Revenue Today
-$stmtToday = $pdo->prepare("SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as count FROM sales WHERE DATE(created_at) = ?");
+$stmtToday = $pdo->prepare("SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as count FROM sales WHERE DATE(created_at) = ? AND (status IS NULL OR status != 'Cancelada')");
 $stmtToday->execute([$today]);
 $revenueToday = $stmtToday->fetch();
 
 // 2. Revenue Month
-$stmtMonth = $pdo->prepare("SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as count FROM sales WHERE DATE(created_at) >= ?");
+$stmtMonth = $pdo->prepare("SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as count FROM sales WHERE DATE(created_at) >= ? AND (status IS NULL OR status != 'Cancelada')");
 $stmtMonth->execute([$firstDayMonth]);
 $revenueMonth = $stmtMonth->fetch();
 
@@ -48,7 +48,9 @@ $stmtCatSales = $pdo->query("
         SUM(si.subtotal) as total_amount,
         SUM(si.quantity) as total_units
     FROM sale_items si
+    JOIN sales s ON si.sale_id = s.id
     LEFT JOIN products p ON si.item_id = p.id AND si.item_type = 'product'
+    WHERE (s.status IS NULL OR s.status != 'Cancelada')
     GROUP BY category_label
     ORDER BY total_amount DESC
 ");
@@ -58,6 +60,8 @@ $salesByCategory = $stmtCatSales->fetchAll();
 $stmtTopProducts = $pdo->query("
     SELECT si.item_name, si.item_type, SUM(si.quantity) as total_qty, SUM(si.subtotal) as total_sales
     FROM sale_items si
+    JOIN sales s ON si.sale_id = s.id
+    WHERE (s.status IS NULL OR s.status != 'Cancelada')
     GROUP BY si.item_name, si.item_type
     ORDER BY total_qty DESC
     LIMIT 6
@@ -68,7 +72,7 @@ $topProducts = $stmtTopProducts->fetchAll();
 $trendData = [];
 for ($i = 6; $i >= 0; $i--) {
     $d = date('Y-m-d', strtotime("-$i days"));
-    $stmtTrend = $pdo->prepare("SELECT COALESCE(SUM(total), 0) as total FROM sales WHERE DATE(created_at) = ?");
+    $stmtTrend = $pdo->prepare("SELECT COALESCE(SUM(total), 0) as total FROM sales WHERE DATE(created_at) = ? AND (status IS NULL OR status != 'Cancelada')");
     $stmtTrend->execute([$d]);
     $trendRes = $stmtTrend->fetch();
     $trendData[] = [

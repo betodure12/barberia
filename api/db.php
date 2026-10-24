@@ -105,10 +105,19 @@ function initDatabaseSchema($pdo) {
         amount_paid REAL,
         change_amount REAL DEFAULT 0,
         notes TEXT,
+        status TEXT DEFAULT 'Completada', -- 'Completada', 'Cancelada'
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
         FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
     )");
+
+    // Auto-migration: ensure 'status' column exists in sales if created in previous version
+    try {
+        $cols = $pdo->query("PRAGMA table_info(sales)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('status', $cols)) {
+            $pdo->exec("ALTER TABLE sales ADD COLUMN status TEXT DEFAULT 'Completada'");
+        }
+    } catch (Exception $ignored) {}
 
     // Sale items (services and products included in each sale)
     $pdo->exec("CREATE TABLE IF NOT EXISTS sale_items (
@@ -127,6 +136,23 @@ function initDatabaseSchema($pdo) {
     $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
         setting_key TEXT PRIMARY KEY,
         setting_value TEXT
+    )");
+
+    // Cash Closings / Arqueo Diario table
+    $pdo->exec("CREATE TABLE IF NOT EXISTS cash_closings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        closing_date TEXT NOT NULL, -- YYYY-MM-DD
+        initial_cash REAL DEFAULT 0,
+        cash_sales REAL DEFAULT 0,
+        card_sales REAL DEFAULT 0,
+        transfer_sales REAL DEFAULT 0,
+        total_sales REAL DEFAULT 0,
+        expected_cash REAL DEFAULT 0,
+        actual_cash REAL DEFAULT 0,
+        difference REAL DEFAULT 0,
+        notes TEXT,
+        closed_by TEXT DEFAULT 'Administrador',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 }
 

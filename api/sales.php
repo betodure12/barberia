@@ -57,7 +57,7 @@ switch ($action) {
                 COALESCE(SUM(s.total), 0) as total
             FROM sales s
             LEFT JOIN clients c ON s.client_id = c.id
-            WHERE 1=1
+            WHERE (s.status IS NULL OR s.status != 'Cancelada')
         ";
         $summaryParams = [];
         if (!empty($startDate) && !empty($endDate)) {
@@ -169,8 +169,8 @@ switch ($action) {
 
             // 1. Insert sale
             $stmtSale = $pdo->prepare("
-                INSERT INTO sales (client_id, appointment_id, subtotal, discount, total, payment_method, amount_paid, change_amount, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO sales (client_id, appointment_id, subtotal, discount, total, payment_method, amount_paid, change_amount, notes, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Completada')
             ");
             $stmtSale->execute([$clientId, $appointmentId, $subtotal, $discount, $total, $paymentMethod, $amountPaid, $changeAmount, $notes]);
             $saleId = $pdo->lastInsertId();
@@ -215,6 +215,157 @@ switch ($action) {
             $pdo->rollBack();
             sendJsonResponse(['success' => false, 'error' => 'Error al procesar la venta: ' . $e->getMessage()], 500);
         }
+        break;
+
+    case 'cancel':
+        if ($method !== 'POST') {
+            sendJsonResponse(['success' => false, 'error' => 'Método no permitido'], 405);
+        }
+
+        $data = getJsonInput();
+        $saleId = (int)($data['id'] ?? 0);
+
+        if (!$saleId) {
+            sendJsonResponse(['success' => false, 'error' => 'ID de venta inválido'], 400);
+        }
+
+        $stmtSale = $pdo->prepare("SELECT * FROM sales WHERE id = ?");
+        $stmtSale->execute([$saleId]);
+        $sale = $stmtSale->fetch();
+
+        if (!$sale) {
+            sendJsonResponse(['success' => false, 'error' => 'Venta no encontrada'], 404);
+        }
+
+        if (isset($sale['status']) && $sale['status'] === 'Cancelada') {
+            sendJsonResponse(['success' => false, 'error' => 'Esta venta ya se encuentra anulada'], 400);
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Get products in this sale and restore their stock
+            $stmtItems = $pdo->prepare("SELECT item_id, quantity FROM sale_items WHERE sale_id = ? AND item_type = 'product' AND item_id IS NOT NULL");
+            $stmtItems->execute([$saleId]);
+            $productItems = $stmtItems->fetchAll();
+
+            $stmtRestoreStock = $pdo->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
+            foreach ($productItems as $it) {
+                $stmtRestoreStock->execute([(int)$it['quantity'], (int)$it['item_id']]);
+            }
+
+            // 2. Mark sale as Cancelada
+            $stmtCancel = $pdo->prepare("UPDATE sales SET status = 'Cancelada' WHERE id = ?");
+            $stmtCancel->execute([$saleId]);
+
+            // 3. If tied to an appointment, reset appointment status to 'Confirmada'
+            if (!empty($sale['appointment_id'])) {
+                $stmtApp = $pdo->prepare("UPDATE appointments SET status = 'Confirmada' WHERE id = ?");
+                $stmtApp->execute([$sale['appointment_id']]);
+            }
+
+            $pdo->commit();
+
+            sendJsonResponse([
+                'success' => true,
+                'message' => 'Venta anulada correctamente. El stock de los productos ha sido reintegrado.'
+            ]);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            sendJsonResponse(['success' => false, 'error' => 'Error al anular la venta: ' . $e->getMessage()], 500);
+        }
+        break;
+
+    case 'daily_summary':
+        $date = trim($_GET['date'] ?? date('Y-m-d'));
+
+        // Sum by payment methods for this date (excluding cancelled sales)
+        $stmt = $pdo->prepare("
+            SELECT payment_method, COALESCE(SUM(total), 0) as total, COUNT(*) as count
+            FROM sales
+            WHERE DATE(created_at) = ? AND (status IS NULL OR status != 'Cancelada')
+            GROUP BY payment_method
+        ");
+        $stmt->execute([$date]);
+        $rows = $stmt->fetchAll();
+
+        $summary = [
+            'date' => $date,
+            'cash' => 0,
+            'card' => 0,
+            'transfer' => 0,
+            'total' => 0,
+            'count' => 0
+        ];
+
+        foreach ($rows as $r) {
+            $m = $r['payment_method'];
+            $tot = (float)$r['total'];
+            $cnt = (int)$r['count'];
+
+            if (stripos($m, 'Tarjeta') !== false || stripos($m, 'POS') !== false) {
+                $summary['card'] += $tot;
+            } elseif (stripos($m, 'Transferencia') !== false) {
+                $summary['transfer'] += $tot;
+            } else {
+                $summary['cash'] += $tot;
+            }
+            $summary['total'] += $tot;
+            $summary['count'] += $cnt;
+        }
+
+        // Check if there is already a closing registered for today
+        $stmtClosing = $pdo->prepare("SELECT * FROM cash_closings WHERE closing_date = ? ORDER BY id DESC LIMIT 1");
+        $stmtClosing->execute([$date]);
+        $lastClosing = $stmtClosing->fetch();
+
+        sendJsonResponse([
+            'success' => true,
+            'data' => $summary,
+            'last_closing' => $lastClosing ?: null
+        ]);
+        break;
+
+    case 'close_register':
+        if ($method !== 'POST') {
+            sendJsonResponse(['success' => false, 'error' => 'Método no permitido'], 405);
+        }
+
+        $data = getJsonInput();
+        $closingDate = trim($data['closing_date'] ?? date('Y-m-d'));
+        $initialCash = (float)($data['initial_cash'] ?? 0);
+        $cashSales = (float)($data['cash_sales'] ?? 0);
+        $cardSales = (float)($data['card_sales'] ?? 0);
+        $transferSales = (float)($data['transfer_sales'] ?? 0);
+        $totalSales = (float)($data['total_sales'] ?? ($cashSales + $cardSales + $transferSales));
+        $expectedCash = (float)($data['expected_cash'] ?? ($initialCash + $cashSales));
+        $actualCash = (float)($data['actual_cash'] ?? $expectedCash);
+        $difference = $actualCash - $expectedCash;
+        $notes = trim($data['notes'] ?? '');
+        $closedBy = trim($data['closed_by'] ?? 'Administrador');
+
+        $stmt = $pdo->prepare("
+            INSERT INTO cash_closings 
+            (closing_date, initial_cash, cash_sales, card_sales, transfer_sales, total_sales, expected_cash, actual_cash, difference, notes, closed_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $closingDate, $initialCash, $cashSales, $cardSales, $transferSales,
+            $totalSales, $expectedCash, $actualCash, $difference, $notes, $closedBy
+        ]);
+
+        sendJsonResponse([
+            'success' => true,
+            'message' => 'Cierre de caja guardado exitosamente',
+            'id' => $pdo->lastInsertId(),
+            'difference' => $difference
+        ]);
+        break;
+
+    case 'closings_list':
+        $stmt = $pdo->query("SELECT * FROM cash_closings ORDER BY closing_date DESC, id DESC LIMIT 30");
+        $closings = $stmt->fetchAll();
+        sendJsonResponse(['success' => true, 'data' => $closings]);
         break;
 
     default:

@@ -14,6 +14,7 @@
     SALES: DB_PREFIX + 'sales',
     SALE_ITEMS: DB_PREFIX + 'sale_items',
     SETTINGS: DB_PREFIX + 'settings',
+    CASH_CLOSINGS: DB_PREFIX + 'cash_closings',
     INITIALIZED: DB_PREFIX + 'initialized'
   };
 
@@ -922,6 +923,140 @@
             sale_id: saleId
           };
         }
+      } else if (action === 'cancel') {
+        const saleId = parseInt(body.id, 10);
+        const sIdx = sales.findIndex(s => s.id === saleId);
+        if (sIdx === -1) {
+          statusCode = 404;
+          responseData = { success: false, error: 'Venta no encontrada' };
+        } else if (sales[sIdx].status === 'Cancelada') {
+          statusCode = 400;
+          responseData = { success: false, error: 'Esta venta ya se encuentra anulada' };
+        } else {
+          // Restore stock for products in this sale
+          const items = saleItems.filter(si => si.sale_id === saleId && si.item_type === 'product' && si.item_id);
+          items.forEach(it => {
+            const pIdx = products.findIndex(p => p.id === it.item_id);
+            if (pIdx !== -1) {
+              products[pIdx].stock = (parseInt(products[pIdx].stock, 10) || 0) + (parseInt(it.quantity, 10) || 1);
+            }
+          });
+          sales[sIdx].status = 'Cancelada';
+          saveCollection(KEYS.PRODUCTS, products);
+          saveCollection(KEYS.SALES, sales);
+
+          // Reset appointment if tied
+          if (sales[sIdx].appointment_id) {
+            const aIdx = appointments.findIndex(a => a.id === sales[sIdx].appointment_id);
+            if (aIdx !== -1) {
+              appointments[aIdx].status = 'Confirmada';
+              saveCollection(KEYS.APPOINTMENTS, appointments);
+            }
+          }
+
+          responseData = {
+            success: true,
+            message: 'Venta anulada correctamente. Stock reintegrado al inventario.'
+          };
+        }
+      } else if (action === 'daily_summary') {
+        const today = searchParams.get('date') || formatToday();
+        const salesToday = sales.filter(s => (s.created_at || '').startsWith(today) && s.status !== 'Cancelada');
+
+        const summary = {
+          date: today,
+          cash: 0,
+          card: 0,
+          transfer: 0,
+          total: 0,
+          count: salesToday.length
+        };
+
+        salesToday.forEach(s => {
+          const m = s.payment_method || 'Efectivo';
+          const tot = parseFloat(s.total) || 0;
+          if (m.includes('Tarjeta') || m.includes('POS')) {
+            summary.card += tot;
+          } else if (m.includes('Transferencia')) {
+            summary.transfer += tot;
+          } else {
+            summary.cash += tot;
+          }
+          summary.total += tot;
+        });
+
+        const closings = getCollection(KEYS.CASH_CLOSINGS);
+        const lastClosing = closings.find(c => c.closing_date === today) || null;
+
+        responseData = {
+          success: true,
+          data: summary,
+          last_closing: lastClosing
+        };
+      } else if (action === 'close_register') {
+        const closings = getCollection(KEYS.CASH_CLOSINGS);
+        const closingDate = body.closing_date || formatToday();
+        const initialCash = parseFloat(body.initial_cash) || 0;
+        const cashSales = parseFloat(body.cash_sales) || 0;
+        const cardSales = parseFloat(body.card_sales) || 0;
+        const transferSales = parseFloat(body.transfer_sales) || 0;
+        const totalSales = parseFloat(body.total_sales) || (cashSales + cardSales + transferSales);
+        const expectedCash = parseFloat(body.expected_cash) || (initialCash + cashSales);
+        const actualCash = parseFloat(body.actual_cash) || expectedCash;
+        const difference = actualCash - expectedCash;
+
+        const newClosing = {
+          id: getNextId(closings),
+          closing_date: closingDate,
+          initial_cash: initialCash,
+          cash_sales: cashSales,
+          card_sales: cardSales,
+          transfer_sales: transferSales,
+          total_sales: totalSales,
+          expected_cash: expectedCash,
+          actual_cash: actualCash,
+          difference: difference,
+          notes: body.notes || '',
+          closed_by: body.closed_by || 'Administrador',
+          created_at: formatNow()
+        };
+
+        closings.unshift(newClosing);
+        saveCollection(KEYS.CASH_CLOSINGS, closings);
+
+        responseData = {
+          success: true,
+          message: 'Cierre de caja guardado exitosamente',
+          id: newClosing.id,
+          difference: difference
+        };
+      } else if (action === 'closings_list') {
+        const closings = getCollection(KEYS.CASH_CLOSINGS);
+        responseData = { success: true, data: closings.slice(0, 30) };
+      }
+    }
+    // --- SETTINGS API ---
+    else if (pathname.includes('settings.php')) {
+      let currentSettings = getCollection(KEYS.SETTINGS);
+      if (!currentSettings || Array.isArray(currentSettings) || Object.keys(currentSettings).length === 0) {
+        currentSettings = {
+          business_name: 'MF Barber & Lounge',
+          business_phone: '+595 993 554920',
+          business_address: 'Local Central',
+          ticket_footer: '¡Muchas gracias por su preferencia y compra! 💈✂️',
+          currency_code: 'PYG',
+          currency_symbol: '₲',
+          exchange_rate: '7500'
+        };
+        saveCollection(KEYS.SETTINGS, currentSettings);
+      }
+
+      if (action === 'get') {
+        responseData = { success: true, data: currentSettings };
+      } else if (action === 'update') {
+        const merged = { ...currentSettings, ...body };
+        saveCollection(KEYS.SETTINGS, merged);
+        responseData = { success: true, message: 'Configuración actualizada exitosamente' };
       }
     }
 
@@ -944,7 +1079,17 @@
     const url = (typeof resource === 'string') ? resource : (resource ? resource.url : '');
     
     // Check if target is an API endpoint
-    const isApiCall = url.includes('api/') && (url.includes('.php') || url.includes('dashboard') || url.includes('appointments') || url.includes('clients') || url.includes('products') || url.includes('services') || url.includes('sales'));
+    const isApiCall = url.includes('api/') && (
+      url.includes('.php') || 
+      url.includes('dashboard') || 
+      url.includes('appointments') || 
+      url.includes('clients') || 
+      url.includes('products') || 
+      url.includes('services') || 
+      url.includes('sales') ||
+      url.includes('settings') ||
+      url.includes('sync')
+    );
 
     if (isApiCall && (isFileProtocol || isForcedOffline || !navigator.onLine)) {
       try {
