@@ -84,18 +84,31 @@
         <i class="bi bi-cloud-arrow-up-fill"></i>
         <span>Sincronizar Nube</span>
       </a>
+
+      <div class="nav-section-title master-only" style="display: none;">Seguridad & Licencia</div>
+      <a class="nav-item master-only" onclick="Auth.openMasterControlModal()" style="display: none; cursor: pointer;">
+        <i class="bi bi-shield-lock-fill" style="color: var(--gold-primary);"></i>
+        <span>Control Licencia Demo</span>
+        <span class="nav-badge gold" id="badge-nav-master">MAESTRO</span>
+      </a>
     </nav>
 
-    <div class="sidebar-footer">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="assets/img/logo.jpg" alt="MF Barber" loading="lazy" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold-primary); flex-shrink: 0;">
-        <div>
-          <strong style="color: var(--text-gold); font-size: 0.85rem;">MF Barber & Lounge</strong>
-          <div style="font-size: 0.68rem; color: var(--text-muted);">Sistema de Gestión v2.5</div>
-          <div style="font-size: 0.72rem; color: var(--gold-light); margin-top: 3px; cursor: pointer;" onclick="App.openExchangeRateModal()" title="Clic para cambiar cotización">
-            <i class="bi bi-currency-exchange"></i> <span id="sidebar-exchange-rate-text">1 USD = ₲ 7.500</span>
+    <div class="sidebar-footer" style="flex-direction: column; align-items: stretch; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+          <img src="assets/img/logo.jpg" alt="MF Barber" loading="lazy" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--gold-primary); flex-shrink: 0;">
+          <div style="min-width: 0;">
+            <strong id="sidebar-user-name" style="color: var(--text-gold); font-size: 0.8rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuario Maestro</strong>
+            <div id="sidebar-user-role" style="font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Administrador Total</div>
           </div>
         </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="Auth.logout()" title="Cerrar Sesión" style="padding: 4px 8px; font-size: 0.72rem; height: 28px; border-color: rgba(255,255,255,0.15);">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+      <div style="font-size: 0.7rem; color: var(--gold-light); display: flex; justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px solid var(--border-subtle); cursor: pointer;" onclick="App.openExchangeRateModal()" title="Clic para cambiar cotización">
+        <span><i class="bi bi-currency-exchange"></i> <span id="sidebar-exchange-rate-text">1 USD = ₲ 7.500</span></span>
+        <span style="font-size: 0.65rem; color: var(--text-muted);">v2.5</span>
       </div>
     </div>
   </aside>
@@ -146,6 +159,18 @@
           <span class="live-clock-dot"></span>
           <span id="live-time">CARGANDO...</span>
         </div>
+
+        <!-- Demo Trial Badge (visible when logged in as demo) -->
+        <div class="topbar-demo-badge" id="topbar-demo-badge" title="Estás utilizando la versión de demostración">
+          <i class="bi bi-hourglass-split text-gold"></i>
+          <span id="demo-remaining-time-text">Prueba: 24h restantes</span>
+        </div>
+
+        <!-- Master Control Button in Topbar (visible when logged in as master) -->
+        <button type="button" class="btn btn-outline-gold btn-sm master-only" onclick="Auth.openMasterControlModal()" title="Control Maestro de Licencia Demo" style="display: none; padding: 4px 10px; font-weight: 700; height: 32px; font-size: 0.78rem;">
+          <i class="bi bi-shield-lock-fill"></i> <span class="d-none-mobile">Control Demo</span>
+        </button>
+
         <button class="btn btn-outline-gold btn-sm d-none-mobile" onclick="Appointments.openNewModal()">
           <i class="bi bi-calendar-plus"></i> <span>Nueva Cita</span>
         </button>
@@ -1247,6 +1272,187 @@
   </div>
 </div>
 
+<!-- Modal: Login Portal (Master & Demo) -->
+<div class="auth-modal-overlay" id="modal-auth-login">
+  <div class="auth-card">
+    <div class="auth-header">
+      <img src="assets/img/logo.jpg" alt="MF Barber" class="auth-logo-img">
+      <h2 style="font-family: var(--font-brand); color: #fff; font-size: 1.25rem; margin-bottom: 2px; letter-spacing: 0.05em;">MF BARBER</h2>
+      <p style="font-size: 0.74rem; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 0;">& LOUNGE SYSTEM</p>
+    </div>
+
+    <!-- Tabs: Modo Prueba vs Acceso Maestro -->
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab-btn active" id="tab-login-demo" onclick="Auth.toggleLoginMode('demo')">
+        <i class="bi bi-play-circle-fill text-gold"></i> Probar Demo Gratis
+      </button>
+      <button type="button" class="auth-tab-btn" id="tab-login-admin" onclick="Auth.toggleLoginMode('admin')">
+        <i class="bi bi-shield-lock-fill"></i> Acceso Maestro
+      </button>
+    </div>
+
+    <div class="auth-body">
+      <!-- Demo Card (1-Click for Clients to test!) -->
+      <div id="login-card-demo">
+        <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; text-align: center;">
+          <div style="font-weight: 800; font-size: 0.95rem; color: #fff; margin-bottom: 4px;">¿Quieres conocer la app?</div>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+            Ingresa al <strong>Modo Demostración</strong> para probar ventas en caja POS, agendar turnos de prueba, gestionar clientes y revisar reportes en tiempo real.
+          </p>
+        </div>
+
+        <button type="button" class="btn-demo-quick" onclick="Auth.loginAsDemo()">
+          <i class="bi bi-lightning-charge-fill"></i> Ingresar a la Demo Ahora
+        </button>
+
+        <div style="text-align: center; margin-top: 14px; font-size: 0.72rem; color: var(--text-muted);">
+          <i class="bi bi-shield-check text-emerald"></i> Acceso seguro por tiempo limitado regulado por el administrador.
+        </div>
+      </div>
+
+      <!-- Admin Login Form (For Master User) -->
+      <div id="login-card-admin" style="display: none;">
+        <form id="auth-login-form">
+          <div id="login-error-msg" style="display: none; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: #fca5a5; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 12px; font-weight: 600;"></div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="font-size: 0.82rem; color: var(--text-secondary);"><i class="bi bi-person-fill text-gold"></i> Usuario Maestro:</label>
+            <input type="text" id="login-username" class="form-control" value="admin" required placeholder="admin">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="font-size: 0.82rem; color: var(--text-secondary);"><i class="bi bi-key-fill text-gold"></i> Contraseña:</label>
+            <input type="password" id="login-password" class="form-control" required placeholder="••••••••">
+          </div>
+
+          <button type="submit" class="btn btn-gold" id="btn-login-submit" style="width: 100%; padding: 12px; font-weight: 800; font-size: 0.92rem;">
+            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión como Maestro
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Trial Expired / Deactivated Screen -->
+<div class="auth-modal-overlay" id="modal-auth-blocked">
+  <div class="auth-card" style="max-width: 420px; text-align: center;">
+    <div class="auth-body" style="padding: 28px 20px;">
+      <div style="width: 66px; height: 66px; border-radius: 50%; background: rgba(244, 63, 94, 0.15); border: 2px solid var(--rose); color: var(--rose); display: flex; align-items: center; justify-content: center; font-size: 1.85rem; margin: 0 auto 14px; box-shadow: 0 0 24px rgba(244, 63, 94, 0.35);">
+        <i class="bi bi-lock-fill"></i>
+      </div>
+
+      <h3 style="color: #fff; font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">Acceso de Prueba Pausado</h3>
+      <p id="auth-blocked-message" style="color: var(--text-secondary); font-size: 0.84rem; line-height: 1.45; margin-bottom: 18px;">
+        Tu periodo de prueba ha finalizado o ha sido pausado por el administrador del sistema.
+      </p>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 18px; text-align: left;">
+        <div style="font-size: 0.74rem; color: var(--gold-light); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">¿Deseas activar tu barbería?</div>
+        <div style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4;">Comunícate directamente con el creador del sistema para solicitar más días de prueba o adquirir la licencia oficial completa.</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <a href="https://wa.me/?text=Hola,%20quisiera%20solicitar%20activaci%C3%B3n%20para%20el%20Sistema%20MF%20Barber" target="_blank" class="btn btn-whatsapp" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.88rem; justify-content: center;">
+          <i class="bi bi-whatsapp"></i> Solicitar Activación / Licencia
+        </a>
+        <button type="button" class="btn btn-outline btn-sm" onclick="Auth.hideBlockedModal(); Auth.showLoginModal(); Auth.toggleLoginMode('admin');" style="margin-top: 4px;">
+          <i class="bi bi-shield-lock"></i> Soy el Administrador (Ingresar como Maestro)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Master Trial & License Control Panel -->
+<div class="modal-overlay" id="modal-master-control" onclick="if(event.target === this) Auth.closeMasterControlModal()">
+  <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 8px; color: #fff;">
+        <i class="bi bi-shield-lock-fill text-gold"></i> Control de Licencia y Acceso Demo
+      </h3>
+      <button type="button" class="modal-close-btn" onclick="Auth.closeMasterControlModal()" title="Cerrar ventana">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Live Status Card -->
+      <div class="master-control-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Estado del Usuario de Prueba (demo):</div>
+            <div style="margin-top: 3px;">
+              <span id="master-demo-status-badge" class="badge badge-emerald">Consultando...</span>
+            </div>
+          </div>
+          <button type="button" id="btn-master-toggle-demo" class="btn btn-danger btn-sm" onclick="Auth.toggleDemo(0)">
+            <i class="bi bi-pause-fill"></i> Desactivar Acceso Demo Ya
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Vencimiento Actual:</div>
+            <div id="master-demo-expiry-text" style="font-family: var(--font-mono); font-weight: 700; color: #fff; font-size: 0.88rem;">-</div>
+          </div>
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Tiempo Restante:</div>
+            <div id="master-demo-remaining-text" style="font-family: var(--font-mono); font-weight: 700; color: var(--gold-light); font-size: 0.88rem;">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Days Add Buttons -->
+      <div class="master-control-box">
+        <label style="font-size: 0.82rem; font-weight: 700; color: #fff; margin-bottom: 4px; display: block;">
+          <i class="bi bi-clock-history text-gold"></i> Asignar / Extender Tiempo de Prueba:
+        </label>
+        <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 8px;">
+          Elige cuántos días deseas habilitar. Si estaba vencido o pausado, se reactivará de inmediato:
+        </p>
+        <div class="master-action-grid">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="Auth.extendDemo(1, this)" style="font-weight: 700;">+ 1 Día</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="Auth.extendDemo(3, this)" style="font-weight: 700;">+ 3 Días</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="Auth.extendDemo(7, this)" style="font-weight: 700;">+ 7 Días</button>
+          <button type="button" class="btn btn-gold btn-sm" onclick="Auth.extendDemo(30, this)" style="font-weight: 700;">+ 30 Días</button>
+        </div>
+      </div>
+
+      <!-- Specific Custom Expiration Date -->
+      <div class="master-control-box">
+        <label style="font-size: 0.82rem; font-weight: 700; color: #fff; margin-bottom: 6px; display: block;">
+          <i class="bi bi-calendar-event text-gold"></i> O define fecha y hora de vencimiento exacta:
+        </label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <input type="datetime-local" id="master-custom-expiry-input" class="form-control" style="flex: 1; min-width: 200px; font-size: 0.84rem; height: 38px;">
+          <button type="button" id="btn-save-master-expiry" class="btn btn-outline-gold btn-sm" onclick="Auth.setCustomExpiry()" style="font-weight: 700; height: 38px; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="bi bi-check-lg"></i> Guardar Fecha
+          </button>
+        </div>
+      </div>
+
+      <!-- Credentials & Demo Maintenance -->
+      <div class="master-control-box" style="margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: #fff;"><i class="bi bi-key text-gold"></i> Credenciales de Acceso:</div>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px;">
+          • <strong>Usuario Demo:</strong> <code>demo</code> / clave: <code>demo123</code> (o botón de 1 clic)<br>
+          • <strong>Usuario Maestro:</strong> <code>admin</code> / clave: <code>admin123</code>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="Auth.resetDemoData()" style="font-size: 0.78rem; width: 100%;">
+          <i class="bi bi-arrow-counterclockwise"></i> Limpiar Datos de Prueba y Restaurar Fábrica
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-gold btn-modal-cancel" onclick="Auth.closeMasterControlModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
+        <i class="bi bi-check2"></i> Listo / Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Bottom Navigation Bar -->
 <nav class="mobile-bottom-nav">
   <button class="mobile-nav-btn active" data-view="appointments">
@@ -1278,6 +1484,7 @@
 
 <!-- Custom Scripts -->
 <script src="assets/js/offline-db.js?v=<?= time() ?>"></script>
+<script src="assets/js/auth.js?v=<?= time() ?>"></script>
 <script src="assets/js/app.js?v=<?= time() ?>"></script>
 <script src="assets/js/dashboard.js?v=<?= time() ?>"></script>
 <script src="assets/js/appointments.js?v=<?= time() ?>"></script>

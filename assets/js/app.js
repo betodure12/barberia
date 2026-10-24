@@ -305,13 +305,14 @@ const App = {
   closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-      modal.classList.remove('open');
+      modal.classList.remove('open', 'active');
     }
   },
 
   formatDate(dateStr) {
     if (!dateStr) return '-';
-    const parts = dateStr.split('-');
+    const datePart = dateStr.includes(' ') ? dateStr.split(' ')[0] : dateStr;
+    const parts = datePart.split('-');
     if (parts.length === 3) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }

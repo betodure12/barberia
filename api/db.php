@@ -154,6 +154,33 @@ function initDatabaseSchema($pdo) {
         closed_by TEXT DEFAULT 'Administrador',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
+
+    // Users table for Master and Demo Trial control
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'demo', -- 'master' or 'demo'
+        is_active INTEGER DEFAULT 1, -- 1: active, 0: deactivated
+        trial_expires_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // Seed default Master and Demo users if none exist
+    $userCount = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    if ($userCount == 0) {
+        // Master account (Administrador / Dueño)
+        $masterPass = password_hash('admin123', PASSWORD_DEFAULT);
+        $stmtMaster = $pdo->prepare("INSERT INTO users (username, password, role, is_active, trial_expires_at) VALUES ('admin', ?, 'master', 1, NULL)");
+        $stmtMaster->execute([$masterPass]);
+
+        // Demo / Trial account (Usuario de Prueba - 14 días iniciales)
+        $demoPass = password_hash('demo123', PASSWORD_DEFAULT);
+        $initialTrialExpires = date('Y-m-d H:i:s', strtotime('+14 days'));
+        $stmtDemo = $pdo->prepare("INSERT INTO users (username, password, role, is_active, trial_expires_at) VALUES ('demo', ?, 'demo', 1, ?)");
+        $stmtDemo->execute([$demoPass, $initialTrialExpires]);
+    }
 }
 
 /**
