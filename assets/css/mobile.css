@@ -1,0 +1,452 @@
+/* ==========================================================================
+   MF Barber - Mobile Optimization Layer
+   Target: Mid-range phones 360-430px wide, Android 10+
+   ========================================================================== */
+
+/* PERFORMANCE: Reduce paint cost on low-end GPUs */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar, .modal-overlay, .toast {
+  will-change: transform;
+}
+
+/* SAFE AREA INSETS (notch / navigation bar) */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* BASE MOBILE */
+@media (max-width: 480px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    font-size: 14.5px !important; /* Escala optimizada para que la app no se sienta gigante ni muy cercana */
+  }
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  .app-container {
+    min-height: 100dvh;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  .main-wrapper {
+    width: 100% !important;
+    margin-left: 0 !important;
+    min-width: 0 !important;
+  }
+
+  /* TOPBAR: Adaptable y sin desborde horizontal */
+  .topbar {
+    height: auto !important;
+    min-height: 54px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+  }
+  .topbar-logo-img {
+    display: block !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 1.5px solid var(--gold-primary) !important;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4) !important;
+    margin-right: 2px !important;
+    flex-shrink: 0 !important;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  .topbar-brand-box {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+  .page-title-box {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+  .page-title-box h1 {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+  .topbar-back-btn { width: 34px !important; height: 34px !important; padding: 0 8px !important; flex-shrink: 0 !important; }
+  .mobile-menu-toggle { padding: 6px 8px !important; font-size: 1.15rem !important; flex-shrink: 0 !important; }
+  .topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+  }
+  .currency-switcher-widget { gap: 2px !important; padding: 2px 4px !important; flex-shrink: 0 !important; }
+  .currency-btn { padding: 4px 6px !important; font-size: 0.68rem !important; min-height: 28px !important; }
+  .cur-text { display: none; }
+  .currency-rate-btn { width: 28px !important; height: 28px !important; padding: 0 !important; }
+  
+  .d-none-mobile { display: none !important; }
+  .live-clock { display: none !important; }
+  #app-mode-badge { display: none !important; }
+
+  /* CONTENT AREA */
+  .content-area {
+    padding: 10px 10px 85px 10px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* SIDEBAR */
+  .sidebar { width: 100vw !important; max-width: 280px !important; }
+  .sidebar-header {
+    padding-top: max(40px, calc(20px + env(safe-area-inset-top, 20px))) !important;
+    padding-bottom: 16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    gap: 12px !important;
+  }
+  .brand-logo-img { width: 46px !important; height: 46px !important; }
+  .brand-info h2 { font-size: 1rem !important; }
+  .nav-item { padding: 11px 14px !important; font-size: 0.88rem !important; min-height: 44px; }
+
+  /* BOTTOM NAV */
+  .mobile-bottom-nav { height: calc(56px + var(--safe-bottom)) !important; padding-bottom: var(--safe-bottom) !important; }
+  .mobile-nav-btn { font-size: 0.6rem !important; flex: 1 !important; }
+  .mobile-nav-btn i { font-size: 1.15rem !important; }
+  .mobile-nav-btn.pos-btn .pos-icon-circle { width: 38px !important; height: 38px !important; font-size: 1.1rem !important; margin-top: -16px !important; }
+
+  /* STAT CARDS */
+  .grid-4 { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .stat-card { padding: 9px 10px !important; min-height: 80px !important; gap: 4px !important; border-radius: 12px !important; }
+  .stat-card .stat-icon { width: 28px !important; height: 28px !important; font-size: 13px !important; border-radius: 8px !important; flex-shrink: 0 !important; }
+  .stat-info { min-width: 0 !important; overflow: hidden !important; }
+  .stat-info .stat-label { font-size: 0.6rem !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .stat-info .stat-value { font-size: 1.05rem !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .stat-info .stat-desc { font-size: 0.58rem !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+
+  /* CARDS */
+  .card { padding: 12px !important; }
+  .card-title { font-size: 0.92rem !important; }
+
+  /* FILTER TABS - horizontal scroll */
+  .filter-tabs {
+    overflow-x: auto !important; flex-wrap: nowrap !important;
+    scrollbar-width: none; -ms-overflow-style: none;
+    padding-bottom: 4px !important; gap: 6px !important;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { white-space: nowrap !important; flex-shrink: 0 !important; padding: 6px 14px !important; font-size: 0.76rem !important; min-height: 36px !important; }
+
+  /* MOBILE ITEM CARDS */
+  .mobile-item-card { padding: 12px 14px !important; transition: background 0.1s ease !important; }
+  .mobile-item-card:active { background: var(--bg-card-hover) !important; }
+  .mobile-item-card-title { font-size: 0.95rem !important; }
+  .mobile-item-card-meta { font-size: 0.76rem !important; }
+  .mobile-item-card-footer .btn { min-height: 40px !important; }
+
+  /* POS */
+  .pos-mobile-toggle-bar {
+    gap: 6px !important; margin-bottom: 10px !important;
+    position: sticky; top: 56px; z-index: 50;
+    background: var(--bg-main); padding: 8px 0 4px;
+  }
+  .pos-mobile-toggle-btn { padding: 10px 6px !important; font-size: 0.78rem !important; min-height: 42px !important; }
+  .pos-container {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #pos-panel-catalog {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .pos-catalog-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding-right: 0 !important;
+  }
+  .pos-item-card {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    transition: background 0.12s ease, border-color 0.12s ease !important;
+    transform: none !important;
+    margin-bottom: 0 !important;
+  }
+  .pos-item-card:active {
+    background: var(--bg-card-hover) !important;
+    border-color: var(--gold-primary) !important;
+    transform: scale(0.98) !important;
+  }
+  .pos-item-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+  }
+  .pos-item-top .badge {
+    font-size: 0.72rem !important;
+    padding: 3px 8px !important;
+  }
+  .pos-item-body {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    margin-bottom: 8px !important;
+    min-width: 0 !important;
+  }
+  .pos-item-card .item-name {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: #fff !important;
+    display: block !important;
+    overflow: visible !important;
+    word-break: break-word !important;
+    margin: 0 0 4px 0 !important;
+    min-height: auto !important;
+    -webkit-line-clamp: unset !important;
+  }
+  .pos-item-card .item-meta {
+    font-size: 0.76rem !important;
+    color: var(--text-muted) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  .pos-item-bottom {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-top: 8px !important;
+    margin-top: auto !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    width: 100% !important;
+  }
+  .pos-item-card .item-price {
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    color: var(--gold-light) !important;
+    font-family: var(--font-mono) !important;
+    white-space: nowrap !important;
+  }
+  .pos-item-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .pos-item-actions .btn-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    font-size: 0.88rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .pos-item-card .pos-add-btn {
+    padding: 6px 14px !important;
+    font-size: 0.8rem !important;
+    min-height: 34px !important;
+    border-radius: var(--radius-sm) !important;
+  }
+  .pos-cart-panel { position: static !important; padding: 12px !important; }
+  .pos-cart-items { max-height: 220px !important; }
+  .cart-item-row { padding: 8px 0 !important; font-size: 0.82rem !important; }
+  .cart-qty-btn { width: 30px !important; height: 30px !important; font-size: 1rem !important; }
+  .cart-total-row.grand-total { font-size: 1.15rem !important; }
+  #btn-pos-checkout { padding: 15px !important; font-size: 1rem !important; min-height: 52px !important; }
+
+  /* FORMS & INPUTS */
+  .form-control {
+    font-size: 16px !important; /* CRITICAL: prevents iOS/Android zoom-on-focus */
+    min-height: 44px !important; border-radius: var(--radius-sm) !important;
+    padding: 10px 12px !important;
+  }
+  .form-group { margin-bottom: 12px !important; }
+  label { font-size: 0.82rem !important; margin-bottom: 6px !important; display: block; }
+
+  /* BUTTONS */
+  .btn {
+    min-height: 40px !important; padding: 9px 14px !important;
+    font-size: 0.84rem !important; transition: opacity 0.1s ease !important;
+  }
+  .btn:active { opacity: 0.82 !important; transform: scale(0.97) !important; }
+  .btn-sm { min-height: 36px !important; padding: 6px 12px !important; font-size: 0.78rem !important; }
+
+  /* MODALS (Bottom Sheet) */
+  .modal-overlay { padding: 0 !important; align-items: flex-end !important; }
+  .modal-box {
+    max-width: 100% !important; width: 100% !important;
+    max-height: 90dvh !important;
+    border-radius: 20px 20px 0 0 !important; border-bottom: none !important;
+  }
+  .modal-box::before {
+    content: ''; display: block; width: 40px; height: 4px;
+    background: rgba(255,255,255,0.2); border-radius: 2px; margin: 8px auto 0;
+  }
+  .modal-header { padding: 12px 16px !important; }
+  .modal-body { padding: 14px 16px !important; overflow-y: auto; }
+  .modal-footer { padding: 12px 16px calc(12px + var(--safe-bottom)) !important; }
+
+  /* TOASTS */
+  .toast-container {
+    bottom: calc(64px + var(--safe-bottom) + 8px) !important;
+    right: 8px !important; left: 8px !important; align-items: stretch !important;
+  }
+  .toast {
+    min-width: unset !important; max-width: 100% !important; width: 100% !important;
+    font-size: 0.84rem !important; padding: 12px 14px !important;
+  }
+
+  /* TABLES */
+  .custom-table th, .custom-table td { padding: 10px 10px !important; font-size: 0.8rem !important; }
+
+  /* RECEIPT */
+  .ticket-receipt { padding: 16px !important; font-size: 0.82rem !important; }
+  .ticket-title { font-size: 1rem !important; }
+
+  /* MISC */
+  .dual-currency { font-size: 0.72em; opacity: 0.75; }
+  .search-box input { font-size: 16px !important; }
+  #dash-revenue-trend-chart { height: 130px !important; overflow: hidden; }
+  .sidebar-footer { padding: 14px 16px calc(14px + var(--safe-bottom)) !important; }
+  .mobile-fab { bottom: calc(68px + var(--safe-bottom)) !important; right: 14px !important; width: 50px !important; height: 50px !important; }
+}
+
+/* EXTRA SMALL PHONES (< 360px) */
+@media (max-width: 359px) {
+  .page-title-box h1 { max-width: 100px !important; font-size: 0.85rem !important; }
+  .pos-catalog-grid { gap: 6px !important; }
+  .pos-item-card { padding: 8px 6px !important; min-height: 105px !important; }
+  .pos-item-card .item-name { font-size: 0.74rem !important; }
+  .pos-item-card .item-price { font-size: 0.84rem !important; }
+  .stat-info .stat-value { font-size: 0.95rem !important; }
+  .currency-btn { padding: 3px 5px !important; font-size: 0.65rem !important; }
+}
+
+/* LANDSCAPE MOBILE (Solo en orientación horizontal) */
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  .topbar { height: 48px !important; }
+  .pos-catalog-grid { grid-template-columns: repeat(3, 1fr) !important; max-height: calc(100vh - 130px) !important; overflow-y: auto !important; }
+  .pos-cart-items { max-height: 160px !important; }
+  .mobile-bottom-nav { display: none !important; }
+  .content-area { padding-bottom: 10px !important; }
+}
+
+/* TOUCH: remove stuck hover states */
+@media (hover: none) {
+  .pos-item-card:hover, .stat-card:hover, .nav-item:hover, .btn:hover { transform: none !important; }
+  .brand-logo-img:hover { transform: none !important; }
+}
+
+/* LOW-END GPU: reduce animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.05ms !important; }
+}
+/* ===== SIDEBAR BACKDROP OVERLAY ===== */
+#sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  z-index: 99;
+  transition: background 0.28s ease;
+}
+#sidebar-backdrop.visible {
+  display: block;
+  background: rgba(0,0,0,0.55);
+}
+@media (max-width: 1024px) {
+  #sidebar-backdrop { display: block; pointer-events: none; }
+  #sidebar-backdrop.visible { pointer-events: auto; }
+}
+
+/* ===== TOPBAR SAFE AREA & RESPONSIVE PADDING ===== */
+@media (max-width: 1024px) {
+  .topbar {
+    height: auto !important;
+    min-height: 76px !important;
+    padding-top: max(38px, env(safe-area-inset-top, 38px)) !important;
+    padding-bottom: 10px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .main-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .sidebar-header {
+    padding-top: max(40px, calc(20px + env(safe-area-inset-top, 20px))) !important;
+    padding-bottom: 18px !important;
+  }
+
+  .brand-logo-img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .content-area {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-top: 14px !important;
+    padding-bottom: calc(90px + var(--safe-bottom, 20px)) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+

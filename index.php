@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="color-scheme" content="dark">
+  <meta name="format-detection" content="telephone=no">
+  <title>MF Barber &amp; Lounge - Sistema de Gestión</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="assets/img/logo.jpg">
+  <link rel="apple-touch-icon" href="assets/img/logo.jpg">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom Stylesheets -->
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="assets/css/components.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="assets/css/mobile.css?v=<?= time() ?>">
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-logo-wrap">
+        <img src="assets/img/logo.jpg" alt="MF Barber Logo" class="brand-logo-img">
+      </div>
+      <div class="brand-info">
+        <h2>MF BARBER</h2>
+        <span>& LOUNGE SYSTEM</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Operaciones Diarias</div>
+      <a class="nav-item active" data-view="appointments">
+        <i class="bi bi-calendar-week-fill"></i>
+        <span>Turnos de Hoy</span>
+        <span class="nav-badge gold" id="badge-nav-turnos">Agenda</span>
+      </a>
+      <a class="nav-item" data-view="pos">
+        <i class="bi bi-lightning-charge-fill"></i>
+        <span>Venta Rápida (Caja)</span>
+        <span class="nav-badge emerald">POS</span>
+      </a>
+      <a class="nav-item" data-view="clients">
+        <i class="bi bi-people-fill"></i>
+        <span>Clientes & Fichas</span>
+      </a>
+
+      <div class="nav-section-title">Control & Finanzas</div>
+      <a class="nav-item" data-view="inventory">
+        <i class="bi bi-box-seam-fill"></i>
+        <span>Stock & Inventario</span>
+        <span class="nav-badge danger" id="badge-low-stock" style="display: none;">0</span>
+      </a>
+      <a class="nav-item" data-view="sales">
+        <i class="bi bi-bar-chart-line-fill"></i>
+        <span>Reportes & Ventas</span>
+      </a>
+      <a class="nav-item" data-view="services">
+        <i class="bi bi-scissors"></i>
+        <span>Cortes & Servicios</span>
+      </a>
+      <a class="nav-item" data-view="dashboard">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Panel Estadístico</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="assets/img/logo.jpg" alt="MF Barber" loading="lazy" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold-primary); flex-shrink: 0;">
+        <div>
+          <strong style="color: var(--text-gold); font-size: 0.85rem;">MF Barber & Lounge</strong>
+          <div style="font-size: 0.68rem; color: var(--text-muted);">Sistema de Gestión v2.5</div>
+          <div style="font-size: 0.72rem; color: var(--gold-light); margin-top: 3px; cursor: pointer;" onclick="App.openExchangeRateModal()" title="Clic para cambiar cotización">
+            <i class="bi bi-currency-exchange"></i> <span id="sidebar-exchange-rate-text">1 USD = ₲ 7.500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Backdrop (mobile tap-to-close) -->
+  <div id="sidebar-backdrop" onclick="document.querySelector('.sidebar').classList.remove('open'); this.classList.remove('visible');"></div>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-wrapper">
+    
+    <!-- Topbar Header -->
+    <header class="topbar">
+      <div class="topbar-brand-box">
+        <button class="topbar-back-btn" id="btn-topbar-back" onclick="App.goBack()" style="display: none;" title="Atrás">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <button class="mobile-menu-toggle" id="btn-mobile-menu">
+          <i class="bi bi-list"></i>
+        </button>
+        <!-- Logo in topbar (visible on mobile) -->
+        <img src="assets/img/logo.jpg" alt="MF Barber" class="topbar-logo-img">
+        <div class="page-title-box">
+          <h1 id="page-title">Turnos</h1>
+          <p id="page-subtitle">Agenda de citas del día y reservas</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <!-- Currency Switcher Widget (Guaraníes ₲ / Dólares $) -->
+        <div class="currency-switcher-widget">
+          <button type="button" class="currency-btn active" id="btn-cur-pyg" onclick="App.setCurrency('PYG')" title="Ver precios en Guaraníes">
+            <span>₲</span> <span class="cur-text">Gs</span>
+          </button>
+          <button type="button" class="currency-btn" id="btn-cur-usd" onclick="App.setCurrency('USD')" title="Ver precios en Dólares">
+            <span>$</span> <span class="cur-text">USD</span>
+          </button>
+          <button type="button" class="currency-rate-btn" onclick="App.openExchangeRateModal()" title="Configurar Cotización USD">
+            <i class="bi bi-sliders"></i>
+          </button>
+        </div>
+
+        <div id="app-mode-badge" style="display: none; align-items: center; gap: 6px; font-size: 0.72rem; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; font-weight: 600;" title="Operando en Modo Celular (Sin PC y Sin Internet)">
+          <i class="bi bi-lightning-charge-fill"></i>
+          <span>Modo Celular</span>
+        </div>
+
+        <div class="live-clock">
+          <span class="live-clock-dot"></span>
+          <span id="live-time">CARGANDO...</span>
+        </div>
+        <button class="btn btn-outline-gold btn-sm d-none-mobile" onclick="Appointments.openNewModal()">
+          <i class="bi bi-calendar-plus"></i> <span>Nueva Cita</span>
+        </button>
+        <button class="btn btn-gold btn-sm d-none-mobile" onclick="App.navigate('pos')">
+          <i class="bi bi-cash-coin"></i> <span>Abrir Caja</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Views Area -->
+    <div class="content-area">
+
+      <!-- ==========================================
+           VIEW 1: DASHBOARD
+           ========================================== -->
+      <section id="view-dashboard" class="view-section">
+        <!-- Metric Cards -->
+        <div class="grid-4" style="margin-bottom: 20px;">
+          <div class="stat-card">
+            <div class="stat-icon gold">
+              <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Ingresos Hoy</div>
+              <div class="stat-value" id="dash-revenue-today">$ 0</div>
+              <div class="stat-desc" id="dash-sales-count-today">0 ventas hoy</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon sky">
+              <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Turnos Hoy</div>
+              <div class="stat-value" id="dash-appointments-today">0</div>
+              <div class="stat-desc">Turnos agendados</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon emerald">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Ingresos Mes</div>
+              <div class="stat-value" id="dash-revenue-month">$ 0</div>
+              <div class="stat-desc" id="dash-sales-month-count">Mes en curso</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Clientes</div>
+              <div class="stat-value" id="dash-clients-count">0</div>
+              <div class="stat-desc">Base de datos</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Appointments of Today -->
+        <div class="card card-gold-accent" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="bi bi-clock-history"></i> Turnos y Citas de Hoy
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-outline btn-sm" onclick="App.navigate('appointments')">
+                Ver Agenda Completa <i class="bi bi-arrow-right"></i>
+              </button>
+              <button class="btn btn-gold btn-sm" onclick="Appointments.openNewModal()">
+                <i class="bi bi-plus-lg"></i> Agendar
+              </button>
+            </div>
+          </div>
+          <div id="dash-today-appointments-list">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Charts & Category Breakdown -->
+        <div class="grid-2" style="margin-bottom: 24px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-pie-chart-fill"></i> Ventas por Categoría
+              </div>
+              <span class="badge badge-gold">Servicios & Extras</span>
+            </div>
+            <div id="dash-category-breakdown">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-bar-chart-fill"></i> Tendencia de Facturación (Últimos 7 días)
+              </div>
+              <span class="badge badge-emerald">En vivo</span>
+            </div>
+            <div id="dash-revenue-trend-chart">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="bi bi-exclamation-triangle-fill text-rose"></i> Alerta de Stock Bajo (Perfumes Decants & Bebidas)
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="App.navigate('inventory')">
+              Ver Inventario <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+          <div id="dash-low-stock-list">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           VIEW 2: APPOINTMENTS / RESERVAS
+           ========================================== -->
+      <section id="view-appointments" class="view-section active">
+        <div class="card" style="margin-bottom: 14px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div style="font-weight: 800; font-size: 1.05rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-calendar2-check-fill text-gold"></i> Agenda & Turnos
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Tolerancia de 5 min tras la hora agendada</div>
+            </div>
+            <button class="btn btn-gold btn-sm" onclick="Appointments.openNewModal()" style="font-weight: 700; padding: 8px 14px;">
+              <i class="bi bi-calendar-plus"></i> <span>+ Agendar Turno</span>
+            </button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <div style="display: flex; gap: 4px; flex: 1;">
+                <button class="btn btn-secondary btn-sm active" id="btn-filter-today" onclick="Appointments.setFilterDate('today')" style="flex: 1; padding: 6px 4px;">Hoy</button>
+                <button class="btn btn-secondary btn-sm" onclick="Appointments.setFilterDate('tomorrow')" style="flex: 1; padding: 6px 4px;">Mañana</button>
+                <button class="btn btn-secondary btn-sm" onclick="Appointments.setFilterDate('all')" style="flex: 1; padding: 6px 4px;">Todos</button>
+              </div>
+              <input type="date" id="appointment-filter-date" class="form-control" style="width: 130px; padding: 6px 8px; font-size: 0.8rem;">
+            </div>
+
+            <div class="filter-tabs" style="margin-bottom: 0;">
+              <button class="tab-btn app-status-filter-btn active" data-status="all">Todos</button>
+              <button class="tab-btn app-status-filter-btn" data-status="Confirmada">✅ Confirmadas</button>
+              <button class="tab-btn app-status-filter-btn" data-status="Cancelada">❌ Canceladas</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="appointments-list-container">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Floating Action Button for Appointments -->
+        <button class="mobile-fab" onclick="Appointments.openNewModal()" title="Agendar Turno">
+          <i class="bi bi-calendar-plus"></i>
+        </button>
+      </section>
+
+      <!-- ==========================================
+           VIEW 3: CLIENTS / CRM
+           ========================================== -->
+      <section id="view-clients" class="view-section">
+        <div class="card" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div class="search-box" style="flex: 1;">
+              <i class="bi bi-search"></i>
+              <input type="text" id="client-search-input" class="form-control" placeholder="Buscar cliente por nombre o tel...">
+            </div>
+            <button class="btn btn-gold" onclick="Clients.openNewModal()" style="white-space: nowrap;">
+              <i class="bi bi-person-plus-fill"></i> <span class="d-none-mobile">Nuevo Cliente</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="clients-list-container">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Floating Action Button for Clients -->
+        <button class="mobile-fab" onclick="Clients.openNewModal()" title="Registrar Cliente">
+          <i class="bi bi-person-plus-fill"></i>
+        </button>
+      </section>
+
+      <!-- ==========================================
+           VIEW 4: SERVICES / CORTES
+           ========================================== -->
+      <section id="view-services" class="view-section">
+        <div class="card" style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="color: #fff; margin-bottom: 2px;">Catálogo de Cortes & Servicios</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Define las tarifas, duraciones y tipos de corte de la barbería</p>
+            </div>
+            <button class="btn btn-gold" onclick="Services.openNewModal()">
+              <i class="bi bi-plus-circle-fill"></i> Nuevo Corte / Servicio
+            </button>
+          </div>
+        </div>
+
+        <div id="services-list-container">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Floating Action Button for Services -->
+        <button class="mobile-fab" onclick="Services.openNewModal()" title="Nuevo Servicio">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </section>
+
+      <!-- ==========================================
+           VIEW 5: INVENTORY / EXTRAS
+           ========================================== -->
+      <section id="view-inventory" class="view-section">
+        <div class="card" style="margin-bottom: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <div class="search-box" style="flex: 1;">
+                <i class="bi bi-search"></i>
+                <input type="text" id="inv-search-input" class="form-control" placeholder="Buscar perfume, decant, bebida...">
+              </div>
+              <button class="btn btn-gold" onclick="Inventory.openNewModal()" style="white-space: nowrap;">
+                <i class="bi bi-plus-lg"></i> <span class="d-none-mobile">Nuevo Producto</span>
+              </button>
+            </div>
+
+            <!-- Categories Tabs -->
+            <div class="filter-tabs" style="margin-bottom: 0;">
+              <button class="tab-btn inv-filter-btn active" data-category="all">
+                <i class="bi bi-grid"></i> Todos
+              </button>
+              <button class="tab-btn inv-filter-btn" data-category="decant">
+                <i class="bi bi-droplet-half"></i> Decants (5/10ml)
+              </button>
+              <button class="tab-btn inv-filter-btn" data-category="perfume">
+                <i class="bi bi-gem"></i> Perfumes Enteros
+              </button>
+              <button class="tab-btn inv-filter-btn" data-category="alcohol">
+                <i class="bi bi-cup-straw"></i> Alcohol / Cerveza
+              </button>
+              <button class="tab-btn inv-filter-btn" data-category="no_alcohol">
+                <i class="bi bi-cup-hot"></i> Gaseosas & Agua
+              </button>
+              <button class="tab-btn inv-filter-btn" data-category="low_stock">
+                <i class="bi bi-exclamation-circle text-rose"></i> Bajo Stock
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="inventory-list-container">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Floating Action Button for Mobile -->
+        <button class="mobile-fab" onclick="Inventory.openNewModal()" title="Agregar Producto">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </section>
+
+      <!-- ==========================================
+           VIEW 6: POINT OF SALE (POS) / CAJA
+           ========================================== -->
+      <section id="view-pos" class="view-section">
+        <!-- Mobile View Toggle (Catalog vs Cart) -->
+        <div class="pos-mobile-toggle-bar">
+          <button class="btn btn-gold btn-sm pos-mobile-toggle-btn active" id="pos-btn-show-catalog" onclick="POS.showMobileView('catalog')">
+            <i class="bi bi-grid-fill"></i> Catálogo de Productos
+          </button>
+          <button class="btn btn-secondary btn-sm pos-mobile-toggle-btn" id="pos-btn-show-cart" onclick="POS.showMobileView('cart')">
+            <i class="bi bi-cart3"></i> Ver Carrito <span class="badge badge-gold" id="pos-cart-count-badge" style="display: none;">0</span>
+          </button>
+        </div>
+
+        <div class="pos-container">
+          
+          <!-- Catalog Panel (Left) -->
+          <div id="pos-panel-catalog">
+            
+            <!-- Quick Client Assignment Bar -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(212,175,55,0.15); display: flex; align-items: center; justify-content: center; color: var(--gold-light); font-size: 1.15rem; flex-shrink: 0;">
+                  <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Cliente para este Ticket:</div>
+                  <select id="pos-client-select-main" class="form-control" style="padding: 4px 8px; font-size: 0.88rem; font-weight: 700; height: 36px; color: #fff; background: var(--bg-input); border-color: var(--border-subtle);" onchange="POS.syncClientSelect(this.value)">
+                    <option value="">-- Venta Casual / Mostrador (Sin cliente) --</option>
+                  </select>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-gold btn-sm" onclick="POS.openQuickAddClient()" style="font-weight: 700; height: 36px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-sm);">
+                <i class="bi bi-person-plus-fill"></i> + Registrar Cliente
+              </button>
+            </div>
+
+            <div class="card" style="margin-bottom: 14px; padding: 12px 14px;">
+              <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="search-box" style="flex: 1; min-width: 180px;">
+                  <i class="bi bi-search"></i>
+                  <input type="text" id="pos-search-input" class="form-control" placeholder="Buscar corte, perfume decant o bebida...">
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn btn-gold btn-sm" onclick="Services.openNewModal()" title="Agregar nuevo corte al catálogo" style="white-space: nowrap; height: 42px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; font-weight: 700; border-radius: var(--radius-sm);">
+                    <i class="bi bi-scissors"></i> <span>+ Corte</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="Inventory.openNewModal()" title="Agregar nuevo perfume o bebida" style="white-space: nowrap; height: 42px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; font-weight: 700; border-radius: var(--radius-sm);">
+                    <i class="bi bi-box-seam"></i> <span>+ Producto</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-tabs" style="margin-bottom: 0;">
+                <button class="tab-btn pos-tab-btn active" data-tab="all">Todos</button>
+                <button class="tab-btn pos-tab-btn" data-tab="services">💈 Cortes</button>
+                <button class="tab-btn pos-tab-btn" data-tab="decant">💧 Decants</button>
+                <button class="tab-btn pos-tab-btn" data-tab="perfume">✨ Perfumes</button>
+                <button class="tab-btn pos-tab-btn" data-tab="alcohol">🍺 Cerveza</button>
+                <button class="tab-btn pos-tab-btn" data-tab="no_alcohol">🥤 Gaseosas</button>
+              </div>
+            </div>
+
+            <!-- Items Catalog Grid -->
+            <div class="pos-catalog-grid" id="pos-catalog-grid">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Live Cart & Checkout Drawer (Right) -->
+          <div class="pos-cart-panel card-gold-accent" id="pos-panel-cart">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="color: #fff; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-cart3 text-gold"></i> Ticket Actual
+              </h3>
+              <button class="btn btn-outline btn-sm" onclick="POS.clearCart()" title="Limpiar Carrito">
+                <i class="bi bi-trash"></i> Vaciar
+              </button>
+            </div>
+
+            <!-- Client Selection & Quick Add Button -->
+            <div class="form-group" style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="margin-bottom: 0; font-size: 0.82rem; color: var(--text-secondary);"><i class="bi bi-person-fill text-gold"></i> Cliente Asignado:</label>
+                <button type="button" class="btn btn-outline-gold btn-sm" onclick="POS.openQuickAddClient()" style="padding: 3px 9px; font-size: 0.72rem; min-height: 26px; border-radius: 6px;">
+                  <i class="bi bi-person-plus-fill"></i> + Nuevo Cliente
+                </button>
+              </div>
+              <select id="pos-client-select" class="form-control">
+                <option value="">-- Venta Rápida (Mostrador / Ocasional) --</option>
+              </select>
+            </div>
+
+            <!-- Cart Items List -->
+            <div class="pos-cart-items" id="pos-cart-items-container">
+              <!-- Rendered by JS -->
+            </div>
+
+            <!-- Payment & Totals -->
+            <div style="margin-top: 14px;">
+              <div class="cart-total-row">
+                <span style="color: var(--text-secondary);">Subtotal:</span>
+                <span style="font-family: var(--font-mono); font-weight: 700; color: #fff;" id="pos-summary-subtotal">$ 0</span>
+              </div>
+
+              <div class="cart-total-row" style="align-items: center;">
+                <span style="color: var(--text-secondary);">Descuento (Gs.):</span>
+                <input type="number" id="pos-discount-input" class="form-control" style="width: 110px; padding: 4px 8px; text-align: right;" value="0" min="0" step="500">
+              </div>
+
+              <div class="cart-total-row grand-total">
+                <span>TOTAL A COBRAR:</span>
+                <span id="pos-summary-total">₲ 0</span>
+              </div>
+
+              <!-- Payment Method -->
+              <div class="form-group" style="margin-top: 14px; margin-bottom: 10px;">
+                <label><i class="bi bi-credit-card"></i> Método de Pago:</label>
+                <select id="pos-payment-method" class="form-control" style="font-weight: 700;">
+                  <option value="Efectivo">💵 Efectivo</option>
+                  <option value="Tarjeta">💳 Cobro en POS (Tarjeta)</option>
+                  <option value="Transferencia">📲 Transferencia / QR</option>
+                </select>
+              </div>
+
+              <!-- Cash Calculator -->
+              <div id="pos-cash-calculator-box" style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 12px; border: 1px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px;">
+                  <span style="font-size: 0.82rem; color: var(--text-secondary); white-space: nowrap;"><i class="bi bi-currency-exchange"></i> Moneda del Pago:</span>
+                  <select id="pos-pay-currency" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.82rem; font-weight: 700;">
+                    <option value="PYG">🇵🇾 Guaraníes (₲)</option>
+                    <option value="USD">🇺🇸 Dólares ($)</option>
+                  </select>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.82rem; color: var(--text-secondary);">Cliente paga con:</span>
+                  <input type="number" id="pos-amount-paid" class="form-control" style="width: 140px; padding: 4px 8px; text-align: right;" placeholder="0">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1rem; font-weight: 800;">
+                  <span style="color: var(--emerald);"><i class="bi bi-arrow-return-left"></i> Vuelto:</span>
+                  <span style="font-family: var(--font-mono); color: var(--emerald); font-size: 1.05rem;" id="pos-summary-change">₲ 0</span>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 14px;">
+                <input type="text" id="pos-notes-input" class="form-control" placeholder="Observaciones / Nota en ticket (opcional)">
+              </div>
+
+              <button class="btn btn-gold" id="btn-pos-checkout" style="width: 100%; padding: 14px; font-size: 1.05rem;" onclick="POS.processCheckout()">
+                <i class="bi bi-check2-circle"></i> Confirmar y Cobrar
+              </button>
+
+              <button type="button" class="btn btn-outline btn-sm" style="width: 100%; margin-top: 10px; font-size: 0.82rem; border-color: rgba(255,255,255,0.12);" onclick="App.navigate('sales')">
+                <i class="bi bi-receipt-cutoff text-gold"></i> Ver Historial y Reportes de Caja
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==========================================
+           VIEW 7: SALES HISTORY
+           ========================================== -->
+      <section id="view-sales" class="view-section">
+        <!-- Resumen Detallado por Medio de Pago (Efectivo, Cobro en POS, Transferencia) -->
+        <div class="sales-breakdown-grid" id="sales-breakdown-container">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div class="card" style="margin-bottom: 20px;">
+          <!-- Filtro de Período Rápido -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i class="bi bi-funnel text-gold"></i>
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Período:</span>
+            </div>
+            <div class="filter-tabs" id="sales-period-tabs" style="margin-bottom: 0;">
+              <button type="button" class="tab-btn active" data-period="all" onclick="Sales.setPeriod('all')">Todo</button>
+              <button type="button" class="tab-btn" data-period="today" onclick="Sales.setPeriod('today')"><i class="bi bi-calendar-event"></i> Hoy</button>
+              <button type="button" class="tab-btn" data-period="week" onclick="Sales.setPeriod('week')">Esta Semana</button>
+              <button type="button" class="tab-btn" data-period="month" onclick="Sales.setPeriod('month')">Este Mes</button>
+            </div>
+          </div>
+
+          <!-- Búsqueda y Selector de Medio de Pago -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div class="search-box" style="flex: 1; min-width: 240px;">
+              <i class="bi bi-search"></i>
+              <input type="text" id="sales-search-input" class="form-control" placeholder="Buscar por cliente, n° ticket o detalle...">
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <label style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap;">Filtrar Medio:</label>
+              <select id="sales-filter-payment" class="form-control" style="width: auto; font-weight: 700;">
+                <option value="all">Todos los Medios</option>
+                <option value="Efectivo">💵 Efectivo</option>
+                <option value="Tarjeta">💳 Cobro en POS</option>
+                <option value="Transferencia">📲 Transferencia</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Filtro por Tipo de Venta (Clientes con Ficha vs Venta Mostrador) -->
+          <div style="display: flex; gap: 8px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i class="bi bi-people-fill text-gold"></i>
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Tipo de Venta:</span>
+            </div>
+            <div class="filter-tabs" id="sales-client-type-tabs" style="margin-bottom: 0;">
+              <button type="button" class="tab-btn active" data-client-type="all" onclick="Sales.setClientType('all')">Todas las Ventas</button>
+              <button type="button" class="tab-btn" data-client-type="registered" onclick="Sales.setClientType('registered')"><i class="bi bi-person-check-fill"></i> Clientes Registrados</button>
+              <button type="button" class="tab-btn" data-client-type="counter" onclick="Sales.setClientType('counter')"><i class="bi bi-lightning-fill"></i> Venta Mostrador (Sin Cliente)</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="sales-list-container">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ==========================================
+     MODALS SECTION
+     ========================================== -->
+
+<!-- Modal: New Appointment (Ultra Simple) -->
+<div class="modal-overlay" id="modal-new-appointment">
+  <div class="modal-box" style="max-width: 460px;">
+    <div class="modal-header">
+      <h3><i class="bi bi-calendar-plus text-gold"></i> Agendar Turno</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="app-modal-form" onsubmit="Appointments.saveAppointment(event)">
+      <div class="modal-body" style="padding: 18px 16px;">
+        
+        <!-- Cliente Selection / Quick Creation -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="margin-bottom: 0; font-weight: 700; color: #fff;"><i class="bi bi-person-fill text-gold"></i> ¿Para qué Cliente es el Turno? *</label>
+            <button type="button" class="btn btn-outline-gold btn-sm" onclick="Appointments.toggleNewClientInput()" id="btn-toggle-app-new-client" style="font-size: 0.72rem; padding: 2px 8px;">
+              <i class="bi bi-person-plus-fill"></i> + Nuevo Cliente
+            </button>
+          </div>
+          
+          <!-- Existing Client Dropdown -->
+          <div id="app-modal-client-select-wrap">
+            <select id="app-modal-client" class="form-control" style="font-size: 0.92rem; font-weight: 600;">
+              <!-- Rendered by JS -->
+            </select>
+          </div>
+
+          <!-- Quick Inline New Client Inputs (Hidden by default) -->
+          <div id="app-modal-new-client-wrap" style="display: none; background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-gold); margin-top: 6px;">
+            <div class="form-group" style="margin-bottom: 8px;">
+              <label style="font-size: 0.75rem;">Nombre Completo *</label>
+              <input type="text" id="app-modal-quick-name" class="form-control" placeholder="Ej: Lucas Martínez" style="font-size: 0.88rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.75rem;">Teléfono / WhatsApp *</label>
+              <input type="tel" id="app-modal-quick-phone" class="form-control" placeholder="Ej: 0981 123456" style="font-size: 0.88rem;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Fecha del Turno -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="margin-bottom: 0; font-weight: 700; color: #fff;"><i class="bi bi-calendar-event text-gold"></i> Fecha del Turno *</label>
+            <div style="display: flex; gap: 4px;">
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 2px 7px;" onclick="Appointments.setModalDate('today')">Hoy</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 2px 7px;" onclick="Appointments.setModalDate('tomorrow')">Mañana</button>
+            </div>
+          </div>
+          <input type="date" id="app-modal-date" class="form-control" required style="font-size: 0.95rem; font-weight: 600;">
+        </div>
+
+        <!-- Hora del Turno -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-weight: 700; color: #fff; margin-bottom: 6px;"><i class="bi bi-clock text-gold"></i> Hora de la Cita *</label>
+          <input type="time" id="app-modal-time" class="form-control" required style="font-size: 1.1rem; font-weight: 800; text-align: center; letter-spacing: 0.05em;">
+          
+          <!-- Quick time chips -->
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='09:00'">09:00</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='10:00'">10:00</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='11:00'">11:00</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='14:00'">14:00</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='15:30'">15:30</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='17:00'">17:00</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='18:30'">18:30</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 8px;" onclick="document.getElementById('app-modal-time').value='20:00'">20:00</button>
+          </div>
+        </div>
+
+        <div style="background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.25); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 0.78rem; color: var(--gold-light); line-height: 1.4;">
+          <i class="bi bi-info-circle-fill"></i> <strong>Nota:</strong> Los cortes y consumiciones (bebidas, perfumes) se agregan directamente al momento de atender y cobrar en la caja.
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold" style="font-weight: 700; padding: 10px 20px;"><i class="bi bi-check-lg"></i> Guardar Turno</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Client (Add / Edit) -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="client-modal-title"><i class="bi bi-person-plus"></i> Registrar Cliente</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="client-modal-form" onsubmit="Clients.saveClient(event)">
+      <input type="hidden" id="client-modal-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre y Apellido *</label>
+          <input type="text" id="client-modal-name" class="form-control" placeholder="Ej: Lucas Martínez" required>
+        </div>
+
+        <div class="form-group">
+          <label>Teléfono / WhatsApp * (Con código de país/área)</label>
+          <input type="text" id="client-modal-phone" class="form-control" placeholder="Ej: +54 9 11 1234-5678" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email (Opcional)</label>
+          <input type="email" id="client-modal-email" class="form-control" placeholder="cliente@correo.com">
+        </div>
+
+        <div class="form-group">
+          <label>Notas / Preferencias de Estilo</label>
+          <textarea id="client-modal-notes" class="form-control" rows="3" placeholder="Ej: Le gusta fade medio, navaja al ras, fan de los decants amaderados"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold">Guardar Cliente</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Client History Profile -->
+<div class="modal-overlay" id="modal-client-history">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3><i class="bi bi-person-badge"></i> Historial y Ficha del Cliente</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: var(--bg-input); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px solid var(--border-subtle);">
+        <h3 id="history-client-name" style="color: #fff; font-size: 1.25rem;">Nombre</h3>
+        <div style="color: var(--text-gold); font-size: 0.9rem; margin-top: 2px;"><i class="bi bi-telephone"></i> <span id="history-client-phone"></span></div>
+        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 6px;">
+          <strong>Notas:</strong> <span id="history-client-notes"></span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <h4 style="color: #fff; margin-bottom: 10px; font-size: 1rem;"><i class="bi bi-calendar-check text-gold"></i> Últimos Turnos</h4>
+          <div id="history-appointments-list" style="max-height: 250px; overflow-y: auto; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+        <div>
+          <h4 style="color: #fff; margin-bottom: 10px; font-size: 1rem;"><i class="bi bi-bag-check text-gold"></i> Compras & Cobros</h4>
+          <div id="history-sales-list" style="max-height: 250px; overflow-y: auto; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+      <button type="button" class="btn btn-gold" id="history-btn-charge"><i class="bi bi-cash-coin"></i> Registrar Cobro / Venta</button>
+      <button type="button" class="btn btn-secondary btn-modal-cancel">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Choose Type to Add in POS -->
+<div class="modal-overlay" id="modal-pos-new-item">
+  <div class="modal-box" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: #fff;">
+        <i class="bi bi-plus-circle text-gold"></i> Agregar al Catálogo
+      </h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body" style="padding: 20px 16px;">
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 16px;">
+        ¿Qué tipo de artículo deseas registrar en el catálogo?
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-pos-new-item'); Services.openNewModal();" style="padding: 14px; display: flex; align-items: center; gap: 12px; font-size: 0.95rem; font-weight: 700; text-align: left; justify-content: flex-start; border-color: rgba(212,175,55,0.4);">
+          <i class="bi bi-scissors text-gold" style="font-size: 1.3rem;"></i>
+          <div>
+            <div style="color: #fff;">Nuevo Servicio / Corte</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Cortes, perfilado de barba, tratamientos</div>
+          </div>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-pos-new-item'); Inventory.openNewModal();" style="padding: 14px; display: flex; align-items: center; gap: 12px; font-size: 0.95rem; font-weight: 700; text-align: left; justify-content: flex-start; border-color: rgba(168,85,247,0.4);">
+          <i class="bi bi-box-seam text-purple" style="font-size: 1.3rem;"></i>
+          <div>
+            <div style="color: #fff;">Nuevo Producto / Extra</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Decants, perfumes enteros, cervezas, gaseosas</div>
+          </div>
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Service (Add / Edit) -->
+<div class="modal-overlay" id="modal-service">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="service-modal-title"><i class="bi bi-scissors text-gold"></i> Registrar / Editar Corte</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="service-modal-form" onsubmit="Services.saveService(event)">
+      <input type="hidden" id="service-modal-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre del Corte o Servicio *</label>
+          <input type="text" id="service-modal-name" class="form-control" placeholder="Ej: Degradé / Fade Pro, Corte Clásico, Barba..." required>
+          
+          <!-- Quick service name suggestions -->
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 7px;" onclick="document.getElementById('service-modal-name').value='Degradé / Fade Pro'; document.getElementById('service-modal-category').value='Corte'; document.getElementById('service-modal-price').value=50000; document.getElementById('service-modal-duration').value=40;">Degradé Fade</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 7px;" onclick="document.getElementById('service-modal-name').value='Corte Clásico a Tijera'; document.getElementById('service-modal-category').value='Corte'; document.getElementById('service-modal-price').value=35000; document.getElementById('service-modal-duration').value=30;">Corte Clásico</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 7px;" onclick="document.getElementById('service-modal-name').value='Perfilado de Barba & Toalla'; document.getElementById('service-modal-category').value='Barba'; document.getElementById('service-modal-price').value=30000; document.getElementById('service-modal-duration').value=25;">Barba & Toalla</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 7px;" onclick="document.getElementById('service-modal-name').value='Combo Corte + Barba VIP'; document.getElementById('service-modal-category').value='Combo'; document.getElementById('service-modal-price').value=80000; document.getElementById('service-modal-duration').value=55;">Corte + Barba VIP</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 7px;" onclick="document.getElementById('service-modal-name').value='Diseño Freestyle / Líneas'; document.getElementById('service-modal-category').value='Diseño'; document.getElementById('service-modal-price').value=25000; document.getElementById('service-modal-duration').value=20;">Diseño Líneas</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 7px;" onclick="document.getElementById('service-modal-name').value='Corte Infantil'; document.getElementById('service-modal-category').value='Corte'; document.getElementById('service-modal-price').value=30000; document.getElementById('service-modal-duration').value=25;">Corte Infantil</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Categoría *</label>
+            <select id="service-modal-category" class="form-control">
+              <option value="Corte">💈 Corte de Cabello</option>
+              <option value="Barba">🧔 Barba & Afeitado</option>
+              <option value="Combo">✂️ Combo Corte + Barba VIP</option>
+              <option value="Tratamiento">💆 Tratamiento & Lavado</option>
+              <option value="Diseño">🎨 Diseño Freestyle</option>
+              <option value="Color">⚡ Tintura / Platinado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duración Estimada (Minutos) *</label>
+            <input type="number" id="service-modal-duration" class="form-control" value="30" min="5" step="5" required>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 2px 6px; flex: 1;" onclick="document.getElementById('service-modal-duration').value=20">20m</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 2px 6px; flex: 1;" onclick="document.getElementById('service-modal-duration').value=30">30m</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 2px 6px; flex: 1;" onclick="document.getElementById('service-modal-duration').value=45">45m</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 2px 6px; flex: 1;" onclick="document.getElementById('service-modal-duration').value=60">60m</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Precio del Corte (₲ Guaraníes) *</label>
+          <input type="number" id="service-modal-price" class="form-control" placeholder="Ej: 35000 o 50000" min="0" step="500" required>
+          
+          <!-- Price presets in Guaraníes -->
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 6px;" onclick="document.getElementById('service-modal-price').value=25000">₲ 25.000</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 6px;" onclick="document.getElementById('service-modal-price').value=30000">₲ 30.000</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 6px;" onclick="document.getElementById('service-modal-price').value=35000">₲ 35.000</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 6px;" onclick="document.getElementById('service-modal-price').value=40000">₲ 40.000</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 6px;" onclick="document.getElementById('service-modal-price').value=50000">₲ 50.000</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 3px 6px;" onclick="document.getElementById('service-modal-price').value=80000">₲ 80.000</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción / Lo que incluye</label>
+          <textarea id="service-modal-description" class="form-control" rows="2" placeholder="Detalles del corte, toalla caliente, navaja, productos usados..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-check-lg"></i> Guardar en Catálogo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Product (Decants, Full Perfumes, Drinks) -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="product-modal-title"><i class="bi bi-box-seam"></i> Producto / Extra</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form id="product-modal-form" onsubmit="Inventory.saveProduct(event)">
+      <input type="hidden" id="product-modal-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre del Producto *</label>
+          <input type="text" id="product-modal-name" class="form-control" placeholder="Ej: Dior Sauvage EDP (Decant)" required>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Categoría *</label>
+            <select id="product-modal-category" class="form-control">
+              <option value="decant">💧 Perfume Decant (Fraccionado)</option>
+              <option value="perfume">✨ Perfume Entero (Frasco Cerrado)</option>
+              <option value="alcohol">🍺 Bebida Alcohólica</option>
+              <option value="no_alcohol">🥤 Bebida Sin Alcohol / Agua</option>
+              <option value="otro">📦 Otro Producto</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Marca / Fabricante</label>
+            <input type="text" id="product-modal-brand" class="form-control" placeholder="Ej: Dior, Corona, Coca-Cola">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Medida / Volumen</label>
+            <input type="text" id="product-modal-size" class="form-control" placeholder="Ej: 5ml, 10ml, 100ml, 355ml">
+          </div>
+          <div class="form-group">
+            <label>Stock Mínimo Alerta</label>
+            <input type="number" id="product-modal-min-stock" class="form-control" value="3" min="1">
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Precio Costo ($)</label>
+            <input type="number" id="product-modal-cost" class="form-control" value="0" min="0" step="100">
+          </div>
+          <div class="form-group">
+            <label>Precio Venta ($) *</label>
+            <input type="number" id="product-modal-price" class="form-control" placeholder="7500" min="0" step="100" required>
+          </div>
+          <div class="form-group">
+            <label>Stock Inicial *</label>
+            <input type="number" id="product-modal-stock" class="form-control" value="10" min="0" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold">Guardar Producto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Quick Stock Adjustment -->
+<div class="modal-overlay" id="modal-stock-adjust">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="bi bi-boxes"></i> Ajustar Stock de Inventario</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form onsubmit="Inventory.applyStockAdjustment(event)">
+      <input type="hidden" id="stock-modal-product-id">
+      <div class="modal-body">
+        <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 16px; border: 1px solid var(--border-subtle);">
+          <strong id="stock-modal-product-name" style="color: #fff; font-size: 1.05rem;">Producto</strong>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+            Stock actual: <strong id="stock-modal-current" style="color: var(--gold-light);">0</strong>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Operación:</label>
+          <select id="stock-modal-mode" class="form-control">
+            <option value="add">➕ Agregar Unidades (Llegada de Pedido / Reposición)</option>
+            <option value="subtract">➖ Restar Unidades (Merma / Consumo)</option>
+            <option value="set">🎯 Establecer Stock Exacto</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Cantidad de Unidades:</label>
+          <input type="number" id="stock-modal-adjustment" class="form-control" value="5" min="1" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold">Actualizar Stock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Appointment Booking Confirmation Ticket -->
+<div class="modal-overlay" id="modal-appointment-ticket">
+  <div class="modal-box" style="background: #101522; max-width: 440px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 8px; color: #fff;">
+        <i class="bi bi-calendar-check text-gold"></i> Comprobante de Turno
+      </h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="appointment-ticket-content">
+      <!-- Rendered by JS -->
+    </div>
+    <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <button type="button" class="btn btn-whatsapp" id="btn-app-ticket-whatsapp" onclick="Appointments.shareCurrentTicketWhatsApp()">
+        <i class="bi bi-whatsapp"></i> Enviar por WhatsApp
+      </button>
+      <div style="display: flex; gap: 6px;">
+        <button type="button" class="btn btn-secondary" onclick="Appointments.printCurrentAppointmentTicket()">
+          <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <button type="button" class="btn btn-gold btn-modal-cancel">Listo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Printable Receipt Ticket Preview (POS Checkout / Sales) -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal-box" style="background: #101522; max-width: 440px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 8px; color: #fff;"><i class="bi bi-receipt text-gold"></i> Comprobante de Cobro / Venta</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="receipt-ticket-content">
+      <!-- Rendered by JS -->
+    </div>
+    <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <button type="button" class="btn btn-whatsapp" onclick="Sales.sendReceiptWhatsApp()">
+        <i class="bi bi-whatsapp"></i> Enviar por WhatsApp
+      </button>
+      <div style="display: flex; gap: 6px;">
+        <button type="button" class="btn btn-secondary" onclick="Sales.printCurrentReceipt()">
+          <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <button type="button" class="btn btn-gold btn-modal-cancel">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal: Currency Exchange Rate Settings -->
+<div class="modal-overlay" id="modal-exchange-rate">
+  <div class="modal-box" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3><i class="bi bi-currency-exchange text-gold"></i> Cotización USD / Guaraníes</h3>
+      <button class="modal-close-btn">&times;</button>
+    </div>
+    <form onsubmit="event.preventDefault(); App.setExchangeRate(document.getElementById('modal-rate-input').value);">
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+          Define la cotización oficial o de mercado para convertir automáticamente entre <strong>Guaraníes (₲)</strong> y <strong>Dólares ($ USD)</strong> en todo el sistema.
+        </p>
+
+        <div class="form-group">
+          <label>Cotización: 1 Dólar ($ USD) equivale a (₲ Guaraníes) *</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-family: var(--font-mono); font-weight: 700; color: var(--gold-light); font-size: 1.1rem; white-space: nowrap;">1 USD = ₲</span>
+            <input type="number" id="modal-rate-input" class="form-control" value="7500" min="1" step="10" required oninput="App.updateRatePreview()" style="font-weight: 700; font-size: 1.1rem; font-family: var(--font-mono);">
+          </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; display: block;">Valores rápidos comunes:</label>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-rate-input').value = 7400; App.updateRatePreview();" style="padding: 4px 8px; font-size: 0.75rem;">₲ 7.400</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-rate-input').value = 7500; App.updateRatePreview();" style="padding: 4px 8px; font-size: 0.75rem;">₲ 7.500</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-rate-input').value = 7600; App.updateRatePreview();" style="padding: 4px 8px; font-size: 0.75rem;">₲ 7.600</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-rate-input').value = 7700; App.updateRatePreview();" style="padding: 4px 8px; font-size: 0.75rem;">₲ 7.700</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-rate-input').value = 7800; App.updateRatePreview();" style="padding: 4px 8px; font-size: 0.75rem;">₲ 7.800</button>
+          </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div style="background: var(--bg-input); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px;">Vista previa de conversión en vivo:</div>
+          <div id="rate-preview-calc">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-check-lg"></i> Guardar Cotización</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Mobile Bottom Navigation Bar -->
+<nav class="mobile-bottom-nav">
+  <button class="mobile-nav-btn active" data-view="appointments">
+    <i class="bi bi-calendar-week-fill"></i>
+    <span>Turnos</span>
+  </button>
+  <button class="mobile-nav-btn pos-btn" data-view="pos">
+    <div class="pos-icon-circle">
+      <i class="bi bi-lightning-charge-fill"></i>
+    </div>
+    <span>Venta</span>
+  </button>
+  <button class="mobile-nav-btn" data-view="clients">
+    <i class="bi bi-people-fill"></i>
+    <span>Clientes</span>
+  </button>
+  <button class="mobile-nav-btn" data-view="inventory">
+    <i class="bi bi-box-seam-fill"></i>
+    <span>Stock</span>
+  </button>
+  <button class="mobile-nav-btn" data-view="sales">
+    <i class="bi bi-bar-chart-line-fill"></i>
+    <span>Reportes</span>
+  </button>
+</nav>
+
+<!-- Toast Notifications Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Custom Scripts -->
+<script src="assets/js/offline-db.js?v=<?= time() ?>"></script>
+<script src="assets/js/app.js?v=<?= time() ?>"></script>
+<script src="assets/js/dashboard.js?v=<?= time() ?>"></script>
+<script src="assets/js/appointments.js?v=<?= time() ?>"></script>
+<script src="assets/js/clients.js?v=<?= time() ?>"></script>
+<script src="assets/js/services.js?v=<?= time() ?>"></script>
+<script src="assets/js/inventory.js?v=<?= time() ?>"></script>
+<script src="assets/js/pos.js?v=<?= time() ?>"></script>
+<script src="assets/js/sales.js?v=<?= time() ?>"></script>
+
+</body>
+</html>
